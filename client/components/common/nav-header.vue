@@ -14,7 +14,7 @@
         hide-details
         prepend-inner-icon='mdi-magnify'
         :loading='searchIsLoading'
-        @keyup.enter='searchEnter'
+        @keydown.enter='searchEnter'
         autocomplete='none'
       )
     v-layout(row)
@@ -62,7 +62,7 @@
                 hide-details,
                 prepend-inner-icon='mdi-magnify',
                 :loading='searchIsLoading',
-                @keyup.enter='searchEnter'
+                @keydown.enter='searchEnter'
                 @keyup.esc='searchClose'
                 @focus='searchFocus'
                 @blur='searchBlur'

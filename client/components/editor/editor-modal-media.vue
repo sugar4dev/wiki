@@ -25,7 +25,7 @@
                         v-model='newFolderName'
                         :label='$t(`editor:assets.folderName`)'
                         counter='255'
-                        @keyup.enter='createFolder'
+                        @keydown.enter='createFolder'
                         @keyup.esc='newFolderDialog = false'
                         ref='folderNameIpt'
                         )
@@ -202,7 +202,7 @@
             single-line
             :counter='255'
             v-model='renameAssetName'
-            @keyup.enter='renameAsset'
+            @keydown.enter='renameAsset'
             :disabled='renameAssetLoading'
           )
         v-card-chin

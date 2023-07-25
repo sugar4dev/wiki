@@ -26,7 +26,7 @@
                   v-model='newGroupName'
                   label='Group Name'
                   counter='255'
-                  @keyup.enter='createGroup'
+                  @keydown.enter='createGroup'
                   @keyup.esc='newGroupDialog = false'
                   ref='groupNameIpt'
                   )
