@@ -45,7 +45,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.name = false'
-                      @keydown.enter='editPop.name = false'
+                      @keydown.13='editPop.name = false'
                       @keydown.esc='editPop.name = false'
                     )
             v-divider
@@ -75,7 +75,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.location = false'
-                      @keydown.enter='editPop.location = false'
+                      @keydown.13='editPop.location = false'
                       @keydown.esc='editPop.location = false'
                     )
             v-divider
@@ -105,7 +105,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.jobTitle = false'
-                      @keydown.enter='editPop.jobTitle = false'
+                      @keydown.13='editPop.jobTitle = false'
                       @keydown.esc='editPop.jobTitle = false'
                     )
 
@@ -210,7 +210,7 @@
                       flat
                       dense
                       hide-details
-                      @keydown.enter='editPop.timezone = false'
+                      @keydown.13='editPop.timezone = false'
                       @keydown.esc='editPop.timezone = false'
                       style='height: 38px;'
                     )
@@ -253,7 +253,7 @@
                       flat
                       dense
                       hide-details
-                      @keydown.enter='editPop.dateFormat = false'
+                      @keydown.13='editPop.dateFormat = false'
                       @keydown.esc='editPop.dateFormat = false'
                       style='height: 38px;'
                     )
@@ -296,7 +296,7 @@
                       flat
                       dense
                       hide-details
-                      @keydown.enter='editPop.appearance = false'
+                      @keydown.13='editPop.appearance = false'
                       @keydown.esc='editPop.appearance = false'
                       style='height: 38px;'
                     )

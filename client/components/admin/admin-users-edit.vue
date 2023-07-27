@@ -81,7 +81,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.email = false'
-                      @keydown.enter='editPop.email = false'
+                      @keydown.13='editPop.email = false'
                       @keydown.esc='editPop.email = false'
                     )
 
@@ -111,7 +111,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.name = false'
-                      @keydown.enter='editPop.name = false'
+                      @keydown.13='editPop.name = false'
                       @keydown.esc='editPop.name = false'
                     )
 
@@ -157,7 +157,7 @@
                         append-icon='mdi-check'
                         type='password'
                         @click:append='editPop.newPassword = false'
-                        @keydown.enter='editPop.newPassword = false'
+                        @keydown.13='editPop.newPassword = false'
                         @keydown.esc='editPop.newPassword = false'
                       )
                 v-list-item-action
@@ -261,7 +261,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.location = false'
-                      @keydown.enter='editPop.location = false'
+                      @keydown.13='editPop.location = false'
                       @keydown.esc='editPop.location = false'
                     )
             v-divider
@@ -290,7 +290,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.jobTitle = false'
-                      @keydown.enter='editPop.jobTitle = false'
+                      @keydown.13='editPop.jobTitle = false'
                       @keydown.esc='editPop.jobTitle = false'
                     )
             v-divider
@@ -321,7 +321,7 @@
                       hide-details
                       append-icon='mdi-check'
                       @click:append='editPop.timezone = false'
-                      @keydown.enter='editPop.timezone = false'
+                      @keydown.13='editPop.timezone = false'
                       @keydown.esc='editPop.timezone = false'
                     )
 
