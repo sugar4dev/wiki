@@ -196,7 +196,7 @@ exports.up = knex => {
       table.string('jobTitle').defaultTo('')
       table.string('location').defaultTo('')
       table.string('pictureUrl')
-      table.string('timezone').notNullable().defaultTo('America/New_York')
+      table.string('timezone').notNullable().defaultTo('Asia/Tokyo')
       table.boolean('isSystem').notNullable().defaultTo(false)
       table.boolean('isActive').notNullable().defaultTo(false)
       table.boolean('isVerified').notNullable().defaultTo(false)
