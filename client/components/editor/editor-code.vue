@@ -1,59 +1,82 @@
-<template lang='pug'>
-  .editor-code
-    .editor-code-main
-      .editor-code-sidebar
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeInLeft(icon, tile, v-on='on', dark, disabled).mx-0
-              v-icon mdi-link-plus
-          span {{$t('editor:markup.insertLink')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalMedia`)').mx-0
-              v-icon(:color='activeModal === `editorModalMedia` ? `teal` : ``') mdi-folder-multiple-image
-          span {{$t('editor:markup.insertAssets')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p2s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalBlocks`)', disabled).mx-0
-              v-icon(:color='activeModal === `editorModalBlocks` ? `teal` : ``') mdi-view-dashboard-outline
-          span {{$t('editor:markup.insertBlock')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p3s(icon, tile, v-on='on', dark, disabled).mx-0
-              v-icon mdi-code-braces
-          span {{$t('editor:markup.insertCodeBlock')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p4s(icon, tile, v-on='on', dark, disabled).mx-0
-              v-icon mdi-library-video
-          span {{$t('editor:markup.insertVideoAudio')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', dark, disabled).mx-0
-              v-icon mdi-chart-multiline
-          span {{$t('editor:markup.insertDiagram')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p6s(icon, tile, v-on='on', dark, disabled).mx-0
-              v-icon mdi-function-variant
-          span {{$t('editor:markup.insertMathExpression')}}
-        template(v-if='$vuetify.breakpoint.mdAndUp')
-          v-spacer
-          v-tooltip(right, color='teal')
-            template(v-slot:activator='{ on }')
-              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', dark, @click='toggleFullscreen').mx-0
-                v-icon mdi-arrow-expand-all
-            span {{$t('editor:markup.distractionFreeMode')}}
-      .editor-code-editor
-        textarea(ref='cm')
-    v-system-bar.editor-code-sysbar(dark, status, color='grey darken-3')
-      .caption.editor-code-sysbar-locale {{locale.toUpperCase()}}
-      .caption.px-3 /{{path}}
-      template(v-if='$vuetify.breakpoint.mdAndUp')
-        v-spacer
-        .caption Code
-        v-spacer
-        .caption Ln {{cursorPos.line + 1}}, Col {{cursorPos.ch + 1}}
+<template>  
+  <div class="editor-code">
+    <div class="editor-code-main">
+      <div class="editor-code-sidebar">
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeInLeft mx-0" icon tile v-on="on" dark disabled>
+              <v-icon>mdi-link-plus</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertLink')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p1s mx-0" icon tile v-on="on" dark @click="toggleModal(`editorModalMedia`)">
+              <v-icon :color="activeModal === `editorModalMedia` ? `teal` : ``">mdi-folder-multiple-image</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertAssets')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p2s mx-0" icon tile v-on="on" dark @click="toggleModal(`editorModalBlocks`)" disabled>
+              <v-icon :color="activeModal === `editorModalBlocks` ? `teal` : ``">mdi-view-dashboard-outline</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertBlock')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p3s mx-0" icon tile v-on="on" dark disabled>
+              <v-icon>mdi-code-braces</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertCodeBlock')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p4s mx-0" icon tile v-on="on" dark disabled>
+              <v-icon>mdi-library-video</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertVideoAudio')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p5s mx-0" icon tile v-on="on" dark disabled>
+              <v-icon>mdi-chart-multiline</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertDiagram')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p6s mx-0" icon tile v-on="on" dark disabled>
+              <v-icon>mdi-function-variant</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertMathExpression')}}</span>
+        </v-tooltip>
+        <template v-if="$vuetify.breakpoint.mdAndUp">
+          <v-spacer></v-spacer>
+          <v-tooltip right color="teal">
+            <template v-slot:activator="{ on }">
+              <v-btn class="mt-3 animated fadeInLeft wait-p8s mx-0" icon tile v-on="on" dark @click="toggleFullscreen">
+                <v-icon>mdi-arrow-expand-all</v-icon>
+              </v-btn>
+            </template><span>{{$t('editor:markup.distractionFreeMode')}}</span>
+          </v-tooltip>
+        </template>
+      </div>
+      <div class="editor-code-editor">
+        <textarea ref="cm"></textarea>
+      </div>
+    </div>
+    <v-system-bar class="editor-code-sysbar" dark status color="grey darken-3">
+      <div class="caption editor-code-sysbar-locale">{{locale.toUpperCase()}}</div>
+      <div class="caption px-3">/{{path}}</div>
+      <template v-if="$vuetify.breakpoint.mdAndUp">
+        <v-spacer></v-spacer>
+        <div class="caption">Code</div>
+        <v-spacer></v-spacer>
+        <div class="caption">Ln {{cursorPos.line + 1}}, Col {{cursorPos.ch + 1}}</div>
+      </template>
+    </v-system-bar>
+  </div>
 </template>
 
 <script>

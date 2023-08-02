@@ -1,27 +1,24 @@
-<template lang='pug'>
-  v-dialog(
-    v-model='isShown'
-    max-width='550'
-    persistent
-    overlay-color='red darken-4'
-    overlay-opacity='.7'
-    )
-    v-card
-      .dialog-header.is-short.is-red
-        v-icon.mr-2(color='white') mdi-file-document-box-remove-outline
-        span {{$t('common:page.delete')}}
-      v-card-text.pt-5
-        i18next.body-1(path='common:page.deleteTitle', tag='div')
-          span.red--text.text--darken-2(place='title') {{pageTitle}}
-        .caption {{$t('common:page.deleteSubtitle')}}
-        v-chip.mt-3.ml-0.mr-1(label, color='red lighten-4', small)
-          .caption.red--text.text--darken-2 {{pageLocale.toUpperCase()}}
-        v-chip.mt-3.mx-0(label, color='red lighten-5', small)
-          span.red--text.text--darken-2 /{{pagePath}}
-      v-card-chin
-        v-spacer
-        v-btn(text, @click='discard', :disabled='loading') {{$t('common:actions.cancel')}}
-        v-btn.px-4(color='red darken-2', @click='deletePage', :loading='loading').white--text {{$t('common:actions.delete')}}
+<template>  
+  <v-dialog v-model="isShown" max-width="550" persistent overlay-color="red darken-4" overlay-opacity=".7">
+    <v-card>
+      <div class="dialog-header is-short is-red">
+        <v-icon class="mr-2" color="white">mdi-file-document-box-remove-outline</v-icon><span>{{$t('common:page.delete')}}</span>
+      </div>
+      <v-card-text class="pt-5">
+        <i18next class="body-1" path="common:page.deleteTitle" tag="div"><span class="red--text text--darken-2" place="title">{{pageTitle}}</span></i18next>
+        <div class="caption">{{$t('common:page.deleteSubtitle')}}</div>
+        <v-chip class="mt-3 ml-0 mr-1" label color="red lighten-4" small>
+          <div class="caption red--text text--darken-2">{{pageLocale.toUpperCase()}}</div>
+        </v-chip>
+        <v-chip class="mt-3 mx-0" label color="red lighten-5" small><span class="red--text text--darken-2">/{{pagePath}}</span></v-chip>
+      </v-card-text>
+      <v-card-chin>
+        <v-spacer></v-spacer>
+        <v-btn text @click="discard" :disabled="loading">{{$t('common:actions.cancel')}}</v-btn>
+        <v-btn class="px-4 white--text" color="red darken-2" @click="deletePage" :loading="loading">{{$t('common:actions.delete')}}</v-btn>
+      </v-card-chin>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

@@ -1,51 +1,34 @@
-<template lang="pug">
-  v-dialog(
-    v-model='dialogOpen'
-    max-width='650'
-    )
-    v-card
-      .dialog-header
-        span {{$t('common:user.search')}}
-        v-spacer
-        v-progress-circular(
-          indeterminate
-          color='white'
-          :size='20'
-          :width='2'
-          v-show='searchLoading'
-          )
-      v-card-text.pt-5
-        v-text-field(
-          outlined
-          :label='$t(`common:user.searchPlaceholder`)'
-          v-model='search'
-          prepend-inner-icon='mdi-account-search-outline'
-          color='primary'
-          ref='searchIpt'
-          hide-details
-          )
-        v-list.grey.mt-3.py-0.radius-7(
-          :class='$vuetify.theme.dark ? `darken-3-d5` : `lighten-3`'
-          two-line
-          dense
-          )
-          template(v-for='(usr, idx) in items')
-            v-list-item(:key='usr.id', @click='setUser(usr)')
-              v-list-item-avatar(size='40', color='primary')
-                span.body-1.white--text {{usr.name | initials}}
-              v-list-item-content
-                v-list-item-title.body-2 {{usr.name}}
-                v-list-item-subtitle {{usr.email}}
-              v-list-item-action
-                v-icon(color='primary') mdi-arrow-right
-            v-divider.my-0(v-if='idx < items.length - 1')
-      v-card-chin
-        v-spacer
-        v-btn(
-          text
-          @click='close'
-          :disabled='loading'
-          ) {{$t('common:actions.cancel')}}
+<template>  
+  <v-dialog v-model="dialogOpen" max-width="650">
+    <v-card>
+      <div class="dialog-header"><span>{{$t('common:user.search')}}</span>
+        <v-spacer></v-spacer>
+        <v-progress-circular indeterminate color="white" :size="20" :width="2" v-show="searchLoading"></v-progress-circular>
+      </div>
+      <v-card-text class="pt-5">
+        <v-text-field outlined :label="$t(`common:user.searchPlaceholder`)" v-model="search" prepend-inner-icon="mdi-account-search-outline" color="primary" ref="searchIpt" hide-details></v-text-field>
+        <v-list class="grey mt-3 py-0 radius-7" :class="$vuetify.theme.dark ? `darken-3-d5` : `lighten-3`" two-line dense>
+          <template v-for="(usr, idx) in items">
+            <v-list-item :key="usr.id" @click="setUser(usr)">
+              <v-list-item-avatar size="40" color="primary"><span class="body-1 white--text">{{usr.name | initials}}</span></v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title class="body-2">{{usr.name}}</v-list-item-title>
+                <v-list-item-subtitle>{{usr.email}}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-icon color="primary">mdi-arrow-right</v-icon>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider class="my-0" v-if="idx < items.length - 1"></v-divider>
+          </template>
+        </v-list>
+      </v-card-text>
+      <v-card-chin>
+        <v-spacer></v-spacer>
+        <v-btn text @click="close" :disabled="loading">{{$t('common:actions.cancel')}}</v-btn>
+      </v-card-chin>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

@@ -1,91 +1,35 @@
-<template lang="pug">
-  v-dialog(v-model='isShown', max-width='650', persistent)
-    v-card
-      .dialog-header.is-short
-        v-icon.mr-3(color='white') mdi-plus
-        span New User
-        v-spacer
-        v-btn.mx-0(color='white', outlined, disabled, dark)
-          v-icon(left) mdi-database-import
-          span Bulk Import
-      v-card-text.pt-5
-        v-select(
-          :items='providers'
-          item-text='displayName'
-          item-value='key'
-          outlined
-          prepend-icon='mdi-domain'
-          v-model='provider'
-          label='Provider'
-          )
-        v-text-field(
-          outlined
-          prepend-icon='mdi-at'
-          v-model='email'
-          label='Email Address'
-          key='newUserEmail'
-          persistent-hint
-          ref='emailInput'
-          )
-        v-text-field(
-          v-if='provider === `local`'
-          outlined
-          prepend-icon='mdi-lock-outline'
-          append-icon='mdi-dice-5'
-          v-model='password'
-          :label='mustChangePwd ? `Temporary Password` : `Password`'
-          counter='255'
-          @click:append='generatePwd'
-          key='newUserPassword'
-          persistent-hint
-          )
-        v-text-field(
-          outlined
-          prepend-icon='mdi-account-outline'
-          v-model='name'
-          label='Name'
-          :hint='provider === `local` ? `Can be changed by the user.` : `May be overwritten by the provider during login.`'
-          key='newUserName'
-          persistent-hint
-          )
-        v-select.mt-2(
-          :items='groups'
-          item-text='name'
-          item-value='id'
-          item-disabled='isSystem'
-          outlined
-          prepend-icon='mdi-account-group'
-          v-model='group'
-          label='Assign to Group(s)...'
-          hint='Note that you cannot assign users to the Administrators or Guests groups from this dialog.'
-          persistent-hint
-          clearable
-          multiple
-          )
-        v-divider
-        v-checkbox(
-          color='primary'
-          label='Require password change on first login'
-          v-if='provider === `local`'
-          v-model='mustChangePwd'
-          hide-details
-        )
-        v-checkbox(
-          color='primary'
-          label='Send a welcome email'
-          hide-details
-          v-model='sendWelcomeEmail'
-          disabled
-        )
-      v-card-chin
-        v-spacer
-        v-btn(text, @click='isShown = false') Cancel
-        v-btn.px-3(depressed, color='primary', @click='newUser(false)')
-          v-icon(left) mdi-chevron-right
-          span Create
-        v-btn.px-3(depressed, color='primary', @click='newUser(true)')
-          v-icon(left) mdi-chevron-double-right
-          span Create and Close
+<template>  
+  <v-dialog v-model="isShown" max-width="650" persistent>
+    <v-card>
+      <div class="dialog-header is-short">
+        <v-icon class="mr-3" color="white">mdi-plus</v-icon><span>New User</span>
+        <v-spacer></v-spacer>
+        <v-btn class="mx-0" color="white" outlined disabled dark>
+          <v-icon left>mdi-database-import</v-icon><span>Bulk Import</span>
+        </v-btn>
+      </div>
+      <v-card-text class="pt-5">
+        <v-select :items="providers" item-text="displayName" item-value="key" outlined prepend-icon="mdi-domain" v-model="provider" label="Provider"></v-select>
+        <v-text-field outlined prepend-icon="mdi-at" v-model="email" label="Email Address" key="newUserEmail" persistent-hint ref="emailInput"></v-text-field>
+        <v-text-field v-if="provider === `local`" outlined prepend-icon="mdi-lock-outline" append-icon="mdi-dice-5" v-model="password" :label="mustChangePwd ? `Temporary Password` : `Password`" counter="255" @click:append="generatePwd" key="newUserPassword" persistent-hint></v-text-field>
+        <v-text-field outlined prepend-icon="mdi-account-outline" v-model="name" label="Name" :hint="provider === `local` ? `Can be changed by the user.` : `May be overwritten by the provider during login.`" key="newUserName" persistent-hint></v-text-field>
+        <v-select class="mt-2" :items="groups" item-text="name" item-value="id" item-disabled="isSystem" outlined prepend-icon="mdi-account-group" v-model="group" label="Assign to Group(s)..." hint="Note that you cannot assign users to the Administrators or Guests groups from this dialog." persistent-hint clearable multiple></v-select>
+        <v-divider></v-divider>
+        <v-checkbox color="primary" label="Require password change on first login" v-if="provider === `local`" v-model="mustChangePwd" hide-details></v-checkbox>
+        <v-checkbox color="primary" label="Send a welcome email" hide-details v-model="sendWelcomeEmail" disabled></v-checkbox>
+      </v-card-text>
+      <v-card-chin>
+        <v-spacer></v-spacer>
+        <v-btn text @click="isShown = false">Cancel</v-btn>
+        <v-btn class="px-3" depressed color="primary" @click="newUser(false)">
+          <v-icon left>mdi-chevron-right</v-icon><span>Create</span>
+        </v-btn>
+        <v-btn class="px-3" depressed color="primary" @click="newUser(true)">
+          <v-icon left>mdi-chevron-double-right</v-icon><span>Create and Close</span>
+        </v-btn>
+      </v-card-chin>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

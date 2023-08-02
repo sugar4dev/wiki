@@ -1,58 +1,36 @@
-<template lang="pug">
-  v-app.editor(:dark='$vuetify.theme.dark')
-    nav-header(dense)
-      template(slot='mid')
-        v-text-field.editor-title-input(
-          dark
-          solo
-          flat
-          v-model='currentPageTitle'
-          hide-details
-          background-color='black'
-          dense
-          full-width
-        )
-      template(slot='actions')
-        v-btn.mr-3.animated.fadeIn(color='amber', outlined, small, v-if='isConflict', @click='openConflict')
-          .overline.amber--text.mr-3 Conflict
-          status-indicator(intermediary, pulse)
-        v-btn.animated.fadeInDown(
-          text
-          color='green'
-          @click.exact='save'
-          @click.ctrl.exact='saveAndClose'
-          :class='{ "is-icon": $vuetify.breakpoint.mdAndDown }'
-          )
-          v-icon(color='green', :left='$vuetify.breakpoint.lgAndUp') mdi-check
-          span.grey--text(v-if='$vuetify.breakpoint.lgAndUp && mode !== `create` && !isDirty') {{ $t('editor:save.saved') }}
-          span.white--text(v-else-if='$vuetify.breakpoint.lgAndUp') {{ mode === 'create' ? $t('common:actions.create') : $t('common:actions.save') }}
-        v-btn.animated.fadeInDown.wait-p1s(
-          text
-          color='blue'
-          @click='openPropsModal'
-          :class='{ "is-icon": $vuetify.breakpoint.mdAndDown, "mx-0": !welcomeMode, "ml-0": welcomeMode }'
-          )
-          v-icon(color='blue', :left='$vuetify.breakpoint.lgAndUp') mdi-tag-text-outline
-          span.white--text(v-if='$vuetify.breakpoint.lgAndUp') {{ $t('common:actions.page') }}
-        v-btn.animated.fadeInDown.wait-p2s(
-          v-if='!welcomeMode'
-          text
-          color='red'
-          :class='{ "is-icon": $vuetify.breakpoint.mdAndDown }'
-          @click='exit'
-          )
-          v-icon(color='red', :left='$vuetify.breakpoint.lgAndUp') mdi-close
-          span.white--text(v-if='$vuetify.breakpoint.lgAndUp') {{ $t('common:actions.close') }}
-        v-divider.ml-3(vertical)
-    v-main
-      component(:is='currentEditor', :save='save')
-      editor-modal-properties(v-model='dialogProps')
-      editor-modal-editorselect(v-model='dialogEditorSelector')
-      editor-modal-unsaved(v-model='dialogUnsaved', @discard='exitGo')
-      component(:is='activeModal')
-
-    loader(v-model='dialogProgress', :title='$t(`editor:save.processing`)', :subtitle='$t(`editor:save.pleaseWait`)')
-    notify
+<template>  
+  <v-app class="editor" :dark="$vuetify.theme.dark">
+    <nav-header dense>
+      <template slot="mid">
+        <v-text-field class="editor-title-input" dark solo flat v-model="currentPageTitle" hide-details background-color="black" dense full-width></v-text-field>
+      </template>
+      <template slot="actions">
+        <v-btn class="mr-3 animated fadeIn" color="amber" outlined small v-if="isConflict" @click="openConflict">
+          <div class="overline amber--text mr-3">Conflict</div>
+          <status-indicator intermediary pulse></status-indicator>
+        </v-btn>
+        <v-btn class="animated fadeInDown" text color="green" @click.exact="save" @click.ctrl.exact="saveAndClose" :class="{ 'is-icon': $vuetify.breakpoint.mdAndDown }">
+          <v-icon color="green" :left="$vuetify.breakpoint.lgAndUp">mdi-check</v-icon><span class="grey--text" v-if="$vuetify.breakpoint.lgAndUp && mode !== `create` && !isDirty">{{ $t('editor:save.saved') }}</span><span class="white--text" v-else-if="$vuetify.breakpoint.lgAndUp">{{ mode === 'create' ? $t('common:actions.create') : $t('common:actions.save') }}</span>
+        </v-btn>
+        <v-btn class="animated fadeInDown wait-p1s" text color="blue" @click="openPropsModal" :class="{ 'is-icon': $vuetify.breakpoint.mdAndDown, 'mx-0': !welcomeMode, 'ml-0': welcomeMode }">
+          <v-icon color="blue" :left="$vuetify.breakpoint.lgAndUp">mdi-tag-text-outline</v-icon><span class="white--text" v-if="$vuetify.breakpoint.lgAndUp">{{ $t('common:actions.page') }}</span>
+        </v-btn>
+        <v-btn class="animated fadeInDown wait-p2s" v-if="!welcomeMode" text color="red" :class="{ 'is-icon': $vuetify.breakpoint.mdAndDown }" @click="exit">
+          <v-icon color="red" :left="$vuetify.breakpoint.lgAndUp">mdi-close</v-icon><span class="white--text" v-if="$vuetify.breakpoint.lgAndUp">{{ $t('common:actions.close') }}</span>
+        </v-btn>
+        <v-divider class="ml-3" vertical></v-divider>
+      </template>
+    </nav-header>
+    <v-main>
+      <component :is="currentEditor" :save="save"></component>
+      <editor-modal-properties v-model="dialogProps"></editor-modal-properties>
+      <editor-modal-editorselect v-model="dialogEditorSelector"></editor-modal-editorselect>
+      <editor-modal-unsaved v-model="dialogUnsaved" @discard="exitGo"></editor-modal-unsaved>
+      <component :is="activeModal"></component>
+    </v-main>
+    <loader v-model="dialogProgress" :title="$t(`editor:save.processing`)" :subtitle="$t(`editor:save.pleaseWait`)"></loader>
+    <notify></notify>
+  </v-app>
 </template>
 
 <script>

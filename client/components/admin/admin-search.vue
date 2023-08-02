@@ -1,102 +1,81 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row, wrap)
-      v-flex(xs12)
-        .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', alt='Search Engine', style='width: 80px;')
-          .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('admin:search.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:search.subtitle')}}
-          v-spacer
-          v-btn.mr-3.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/search', target='_blank')
-            v-icon mdi-help-circle
-          v-btn.animated.fadeInDown.wait-p2s(icon, outlined, color='grey', @click='refresh')
-            v-icon mdi-refresh
-          v-btn.mx-3.animated.fadeInDown.wait-p1s(color='black', dark, depressed, @click='rebuild')
-            v-icon(left) mdi-cached
-            span {{$t('admin:search.rebuildIndex')}}
-          v-btn.animated.fadeInDown(color='success', @click='save', depressed, large)
-            v-icon(left) mdi-check
-            span {{$t('common:actions.apply')}}
-
-      v-flex(lg3, xs12)
-        v-card.animated.fadeInUp
-          v-toolbar(flat, color='primary', dark, dense)
-            .subtitle-1 {{$t('admin:search.searchEngine')}}
-          v-list.py-0(two-line, dense)
-            template(v-for='(eng, idx) in engines')
-              v-list-item(:key='eng.key', @click='selectedEngine = eng.key', :disabled='!eng.isAvailable')
-                v-list-item-avatar(size='24')
-                  v-icon(color='grey', v-if='!eng.isAvailable') mdi-minus-box-outline
-                  v-icon(color='primary', v-else-if='eng.key === selectedEngine') mdi-checkbox-marked-circle-outline
-                  v-icon(color='grey', v-else) mdi-checkbox-blank-circle-outline
-                v-list-item-content
-                  v-list-item-title.body-2(:class='!eng.isAvailable ? `grey--text` : (selectedEngine === eng.key ? `primary--text` : ``)') {{ eng.title }}
-                  v-list-item-subtitle: .caption(:class='!eng.isAvailable ? `grey--text text--lighten-1` : (selectedEngine === eng.key ? `blue--text ` : ``)') {{ eng.description }}
-                v-list-item-avatar(v-if='selectedEngine === eng.key', size='24')
-                  v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
-              v-divider(v-if='idx < engines.length - 1')
-
-      v-flex(lg9, xs12)
-        v-card.animated.fadeInUp.wait-p2s
-          v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{engine.title}}
-          v-card-info(color='blue')
-            div
-              div {{engine.description}}
-              span.caption: a(:href='engine.website') {{engine.website}}
-            v-spacer
-            .admin-providerlogo
-              img(:src='engine.logo', :alt='engine.title')
-          v-card-text
-            .overline.mb-5 {{$t('admin:search.engineConfig')}}
-            .body-2.ml-3(v-if='!engine.config || engine.config.length < 1'): em {{$t('admin:search.engineNoConfig')}}
-            template(v-else, v-for='cfg in engine.config')
-              v-select(
-                v-if='cfg.value.type === "string" && cfg.value.enum'
-                outlined
-                :items='cfg.value.enum'
-                :key='cfg.key'
-                :label='cfg.value.title'
-                v-model='cfg.value.value'
-                prepend-icon='mdi-cog-box'
-                :hint='cfg.value.hint ? cfg.value.hint : ""'
-                persistent-hint
-                :class='cfg.value.hint ? "mb-2" : ""'
-              )
-              v-switch.mb-3(
-                v-else-if='cfg.value.type === "boolean"'
-                :key='cfg.key'
-                :label='cfg.value.title'
-                v-model='cfg.value.value'
-                color='primary'
-                prepend-icon='mdi-cog-box'
-                :hint='cfg.value.hint ? cfg.value.hint : ""'
-                persistent-hint
-                inset
-                )
-              v-textarea(
-                v-else-if='cfg.value.type === "string" && cfg.value.multiline'
-                outlined
-                :key='cfg.key'
-                :label='cfg.value.title'
-                v-model='cfg.value.value'
-                prepend-icon='mdi-cog-box'
-                :hint='cfg.value.hint ? cfg.value.hint : ""'
-                persistent-hint
-                :class='cfg.value.hint ? "mb-2" : ""'
-                )
-              v-text-field(
-                v-else
-                outlined
-                :key='cfg.key'
-                :label='cfg.value.title'
-                v-model='cfg.value.value'
-                prepend-icon='mdi-cog-box'
-                :hint='cfg.value.hint ? cfg.value.hint : ""'
-                persistent-hint
-                :class='cfg.value.hint ? "mb-2" : ""'
-                )
+<template>
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img class="animated fadeInUp" src="/_assets/svg/icon-search.svg" alt="Search Engine" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{$t('admin:search.title')}}</div>
+            <div class="subtitle-1 grey--text animated fadeInLeft wait-p2s">{{$t('admin:search.subtitle')}}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn class="mr-3 animated fadeInDown wait-p3s" icon outlined color="grey" href="https://docs.requarks.io/search" target="_blank">
+            <v-icon>mdi-help-circle</v-icon>
+          </v-btn>
+          <v-btn class="animated fadeInDown wait-p2s" icon outlined color="grey" @click="refresh">
+            <v-icon>mdi-refresh</v-icon>
+          </v-btn>
+          <v-btn class="mx-3 animated fadeInDown wait-p1s" color="black" dark depressed @click="rebuild">
+            <v-icon left>mdi-cached</v-icon><span>{{$t('admin:search.rebuildIndex')}}</span>
+          </v-btn>
+          <v-btn class="animated fadeInDown" color="success" @click="save" depressed large>
+            <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.apply')}}</span>
+          </v-btn>
+        </div>
+      </v-flex>
+      <v-flex lg3 xs12>
+        <v-card class="animated fadeInUp">
+          <v-toolbar flat color="primary" dark dense>
+            <div class="subtitle-1">{{$t('admin:search.searchEngine')}}</div>
+          </v-toolbar>
+          <v-list class="py-0" two-line dense>
+            <template v-for="(eng, idx) in engines">
+              <v-list-item :key="eng.key" @click="selectedEngine = eng.key" :disabled="!eng.isAvailable">
+                <v-list-item-avatar size="24">
+                  <v-icon color="grey" v-if="!eng.isAvailable">mdi-minus-box-outline</v-icon>
+                  <v-icon color="primary" v-else-if="eng.key === selectedEngine">mdi-checkbox-marked-circle-outline</v-icon>
+                  <v-icon color="grey" v-else>mdi-checkbox-blank-circle-outline</v-icon>
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title class="body-2" :class="!eng.isAvailable ? `grey--text` : (selectedEngine === eng.key ? `primary--text` : ``)">{{ eng.title }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <div class="caption" :class="!eng.isAvailable ? `grey--text text--lighten-1` : (selectedEngine === eng.key ? `blue--text ` : ``)">{{ eng.description }}</div>
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+                <v-list-item-avatar v-if="selectedEngine === eng.key" size="24">
+                  <v-icon class="animated fadeInLeft" color="primary" large>mdi-chevron-right</v-icon>
+                </v-list-item-avatar>
+              </v-list-item>
+              <v-divider v-if="idx < engines.length - 1"></v-divider>
+            </template>
+          </v-list>
+        </v-card>
+      </v-flex>
+      <v-flex lg9 xs12>
+        <v-card class="animated fadeInUp wait-p2s">
+          <v-toolbar color="primary" dense flat dark>
+            <div class="subtitle-1">{{engine.title}}</div>
+          </v-toolbar>
+          <v-card-info color="blue">
+            <div>
+              <div>{{engine.description}}</div><span class="caption"><a :href="engine.website">{{engine.website}}</a></span>
+            </div>
+            <v-spacer></v-spacer>
+            <div class="admin-providerlogo"><img :src="engine.logo" :alt="engine.title"></div>
+          </v-card-info>
+          <v-card-text>
+            <div class="overline mb-5">{{$t('admin:search.engineConfig')}}</div>
+            <div class="body-2 ml-3" v-if="!engine.config || engine.config.length < 1"><em>{{$t('admin:search.engineNoConfig')}}</em></div>
+            <template v-else v-for="cfg in engine.config">
+              <v-select v-if="cfg.value.type === 'string' && cfg.value.enum" outlined :items="cfg.value.enum" :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-select>
+              <v-switch class="mb-3" v-else-if="cfg.value.type === 'boolean'" :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" color="primary" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint inset></v-switch>
+              <v-textarea v-else-if="cfg.value.type === 'string' && cfg.value.multiline" outlined :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-textarea>
+              <v-text-field v-else outlined :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-text-field>
+            </template>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>

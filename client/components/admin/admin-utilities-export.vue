@@ -1,98 +1,67 @@
-<template lang='pug'>
-  v-card
-    v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 {{ $t('admin:utilities.exportTitle') }}
-    v-card-text
-      .text-center
-        img.animated.fadeInUp.wait-p1s(src='/_assets/svg/icon-big-parcel.svg')
-        .body-2 Export to tarball / file system
-      v-divider.my-4
-      .body-2 What do you want to export?
-      v-checkbox(
-        v-for='choice of entityChoices'
-        :key='choice.key'
-        :label='choice.label'
-        :value='choice.key'
-        color='deep-orange darken-2'
-        hide-details
-        v-model='entities'
-        )
-        template(v-slot:label)
-          div
-            strong.deep-orange--text.text--darken-2 {{choice.label}}
-            .text-caption {{choice.hint}}
-      v-text-field.mt-7(
-        outlined
-        label='Target Folder Path'
-        hint='Either an absolute path or relative to the Wiki.js installation folder, where exported content will be saved to. Note that the folder MUST be empty!'
-        persistent-hint
-        v-model='filePath'
-      )
-
-      v-alert.mt-3(color='deep-orange', outlined, icon='mdi-alert', prominent)
-        .body-2 Depending on your selection, the archive could contain sensitive data such as site configuration keys and hashed user passwords. Ensure the exported archive is treated accordingly.
-        .body-2 For example, you may want to encrypt the archive if stored for backup purposes.
-
-    v-card-chin
-      v-btn.px-3(depressed, color='deep-orange darken-2', :disabled='entities.length < 1', @click='startExport').ml-0
-        v-icon(left, color='white') mdi-database-export
-        span.white--text Start Export
-    v-dialog(
-      v-model='isLoading'
-      persistent
-      max-width='350'
-      )
-      v-card(color='deep-orange darken-2', dark)
-        v-card-text.pa-10.text-center
-          self-building-square-spinner.animated.fadeIn(
-            :animation-duration='4500'
-            :size='40'
-            color='#FFF'
-            style='margin: 0 auto;'
-          )
-          .mt-5.body-1.white--text Exporting...
-          .caption Please wait, this may take a while
-          v-progress-linear.mt-5(
-            color='white'
-            :value='progress'
-            stream
-            rounded
-            :buffer-value='0'
-          )
-    v-dialog(
-      v-model='isSuccess'
-      persistent
-      max-width='350'
-      )
-      v-card(color='green darken-2', dark)
-        v-card-text.pa-10.text-center
-          v-icon(size='60') mdi-check-circle-outline
-          .my-5.body-1.white--text Export completed
-        v-card-actions.green.darken-1
-          v-spacer
-          v-btn.px-5(
-            color='white'
-            outlined
-            @click='isSuccess = false'
-          ) Close
-          v-spacer
-    v-dialog(
-      v-model='isFailed'
-      persistent
-      max-width='800'
-      )
-      v-card(color='red darken-2', dark)
-        v-toolbar(color='red darken-2', dense)
-          v-icon mdi-alert
-          .body-2.pl-3 Export failed
-          v-spacer
-          v-btn.px-5(
-            color='white'
-            text
-            @click='isFailed = false'
-            ) Close
-        v-card-text.pa-5.red.darken-4.white--text
-          span {{errorMessage}}
+<template>  
+  <v-card>
+    <v-toolbar flat color="primary" dark dense>
+      <div class="subtitle-1">{{ $t('admin:utilities.exportTitle') }}</div>
+    </v-toolbar>
+    <v-card-text>
+      <div class="text-center"><img class="animated fadeInUp wait-p1s" src="/_assets/svg/icon-big-parcel.svg">
+        <div class="body-2">Export to tarball / file system</div>
+      </div>
+      <v-divider class="my-4"></v-divider>
+      <div class="body-2">What do you want to export?</div>
+      <v-checkbox v-for="choice of entityChoices" :key="choice.key" :label="choice.label" :value="choice.key" color="deep-orange darken-2" hide-details v-model="entities">
+        <template v-slot:label>
+          <div><strong class="deep-orange--text text--darken-2">{{choice.label}}</strong>
+            <div class="text-caption">{{choice.hint}}</div>
+          </div>
+        </template>
+      </v-checkbox>
+      <v-text-field class="mt-7" outlined label="Target Folder Path" hint="Either an absolute path or relative to the Wiki.js installation folder, where exported content will be saved to. Note that the folder MUST be empty!" persistent-hint v-model="filePath"></v-text-field>
+      <v-alert class="mt-3" color="deep-orange" outlined icon="mdi-alert" prominent>
+        <div class="body-2">Depending on your selection, the archive could contain sensitive data such as site configuration keys and hashed user passwords. Ensure the exported archive is treated accordingly.</div>
+        <div class="body-2">For example, you may want to encrypt the archive if stored for backup purposes.</div>
+      </v-alert>
+    </v-card-text>
+    <v-card-chin>
+      <v-btn class="px-3 ml-0" depressed color="deep-orange darken-2" :disabled="entities.length < 1" @click="startExport">
+        <v-icon left color="white">mdi-database-export</v-icon><span class="white--text">Start Export</span>
+      </v-btn>
+    </v-card-chin>
+    <v-dialog v-model="isLoading" persistent max-width="350">
+      <v-card color="deep-orange darken-2" dark>
+        <v-card-text class="pa-10 text-center">
+          <self-building-square-spinner class="animated fadeIn" :animation-duration="4500" :size="40" color="#FFF" style="margin: 0 auto;"></self-building-square-spinner>
+          <div class="mt-5 body-1 white--text">Exporting...</div>
+          <div class="caption">Please wait, this may take a while</div>
+          <v-progress-linear class="mt-5" color="white" :value="progress" stream rounded :buffer-value="0"></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isSuccess" persistent max-width="350">
+      <v-card color="green darken-2" dark>
+        <v-card-text class="pa-10 text-center">
+          <v-icon size="60">mdi-check-circle-outline</v-icon>
+          <div class="my-5 body-1 white--text">Export completed</div>
+        </v-card-text>
+        <v-card-actions class="green darken-1">
+          <v-spacer></v-spacer>
+          <v-btn class="px-5" color="white" outlined @click="isSuccess = false">Close</v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isFailed" persistent max-width="800">
+      <v-card color="red darken-2" dark>
+        <v-toolbar color="red darken-2" dense>
+          <v-icon>mdi-alert</v-icon>
+          <div class="body-2 pl-3">Export failed</div>
+          <v-spacer></v-spacer>
+          <v-btn class="px-5" color="white" text @click="isFailed = false">Close</v-btn>
+        </v-toolbar>
+        <v-card-text class="pa-5 red darken-4 white--text"><span>{{errorMessage}}</span></v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-card>
 </template>
 
 <script>

@@ -1,93 +1,56 @@
-<template lang='pug'>
-  v-card
-    v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 {{ $t('admin:utilities.contentTitle') }}
-    v-card-text
-      .subtitle-1.pb-3.primary--text Rebuild Page Tree
-      .body-2 The virtual structure of your wiki is automatically inferred from all page paths. You can trigger a full rebuild of the tree if some virtual folders are missing or not valid anymore.
-      v-btn(outlined, color='primary', @click='rebuildTree', :disabled='loading').ml-0.mt-3
-        v-icon(left) mdi-gesture-double-tap
-        span Proceed
-
-      v-divider.my-5
-
-      .subtitle-1.pb-3.primary--text Rerender All Pages
-      .body-2 All pages will be rendered again. Useful if internal links are broken or the rendering pipeline has changed.
-      v-btn(outlined, color='primary', @click='rerenderPages', :disabled='loading', :loading='isRerendering').ml-0.mt-3
-        v-icon(left) mdi-gesture-double-tap
-        span Proceed
-      v-dialog(
-        v-model='isRerendering'
-        persistent
-        max-width='450'
-        )
-        v-card(color='blue darken-2', dark)
-          v-card-text.pa-10.text-center
-            semipolar-spinner.animated.fadeIn(
-              :animation-duration='1500'
-              :size='65'
-              color='#FFF'
-              style='margin: 0 auto;'
-            )
-            .mt-5.body-1.white--text Rendering all pages...
-            .caption(v-if='renderIndex > 0') Rendering {{renderCurrentPath}}... ({{renderIndex}}/{{renderTotal}}, {{renderProgress}}%)
-            .caption.mt-4 Do not leave this page.
-            v-progress-linear.mt-5(
-              color='white'
-              :value='renderProgress'
-              stream
-              rounded
-              :buffer-value='0'
-            )
-
-      v-divider.my-5
-
-      .subtitle-1.pb-3.pl-0.primary--text Migrate all pages to target locale
-      .body-2 If you created content before selecting a different locale and activating the namespacing capabilities, you may want to transfer all content to the base locale.
-      .body-2.red--text: strong This operation is destructive and cannot be reversed! Make sure you have proper backups!
-      v-toolbar.radius-7.mt-5(flat, :color='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-4`', height='80')
-        v-select(
-          label='Source Locale'
-          outlined
-          hide-details
-          :items='locales'
-          item-text='name'
-          item-value='code'
-          v-model='sourceLocale'
-        )
-        v-icon.mx-3(large) mdi-chevron-right-box-outline
-        v-select(
-          label='Target Locale'
-          outlined
-          hide-details
-          :items='locales'
-          item-text='name'
-          item-value='code'
-          v-model='targetLocale'
-        )
-      .body-2.mt-5 Pages that are already in the target locale will not be touched. If a page already exists at the target, the source page will not be modified as it would create a conflict. If you want to overwrite the target page, you must first delete it.
-      v-btn(outlined, color='primary', @click='migrateToLocale', :disabled='loading').ml-0.mt-3
-        v-icon(left) mdi-gesture-double-tap
-        span Proceed
-
-      v-divider.my-5
-
-      .subtitle-1.pb-3.pl-0.primary--text Purge Page History
-      .body-2 You may want to purge old history for pages to reduce database usage.
-      .body-2 This operation only affects the database and not any history saved by a storage module (e.g. git version history)
-      v-toolbar.radius-7.mt-5(flat, :color='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-4`', height='80')
-        v-select(
-          label='Delete history older than...'
-          outlined
-          hide-details
-          :items='purgeHistoryOptions'
-          item-text='title'
-          item-value='key'
-          v-model='purgeHistorySelection'
-        )
-      v-btn(outlined, color='primary', @click='purgeHistory', :disabled='loading').ml-0.mt-3
-        v-icon(left) mdi-gesture-double-tap
-        span Proceed
+<template>  
+  <v-card>
+    <v-toolbar flat color="primary" dark dense>
+      <div class="subtitle-1">{{ $t('admin:utilities.contentTitle') }}</div>
+    </v-toolbar>
+    <v-card-text>
+      <div class="subtitle-1 pb-3 primary--text">Rebuild Page Tree</div>
+      <div class="body-2">The virtual structure of your wiki is automatically inferred from all page paths. You can trigger a full rebuild of the tree if some virtual folders are missing or not valid anymore.</div>
+      <v-btn class="ml-0 mt-3" outlined color="primary" @click="rebuildTree" :disabled="loading">
+        <v-icon left>mdi-gesture-double-tap</v-icon><span>Proceed</span>
+      </v-btn>
+      <v-divider class="my-5"></v-divider>
+      <div class="subtitle-1 pb-3 primary--text">Rerender All Pages</div>
+      <div class="body-2">All pages will be rendered again. Useful if internal links are broken or the rendering pipeline has changed.</div>
+      <v-btn class="ml-0 mt-3" outlined color="primary" @click="rerenderPages" :disabled="loading" :loading="isRerendering">
+        <v-icon left>mdi-gesture-double-tap</v-icon><span>Proceed</span>
+      </v-btn>
+      <v-dialog v-model="isRerendering" persistent max-width="450">
+        <v-card color="blue darken-2" dark>
+          <v-card-text class="pa-10 text-center">
+            <semipolar-spinner class="animated fadeIn" :animation-duration="1500" :size="65" color="#FFF" style="margin: 0 auto;"></semipolar-spinner>
+            <div class="mt-5 body-1 white--text">Rendering all pages...</div>
+            <div class="caption" v-if="renderIndex > 0">Rendering {{renderCurrentPath}}... ({{renderIndex}}/{{renderTotal}}, {{renderProgress}}%)</div>
+            <div class="caption mt-4">Do not leave this page.</div>
+            <v-progress-linear class="mt-5" color="white" :value="renderProgress" stream rounded :buffer-value="0"></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+      <v-divider class="my-5"></v-divider>
+      <div class="subtitle-1 pb-3 pl-0 primary--text">Migrate all pages to target locale</div>
+      <div class="body-2">If you created content before selecting a different locale and activating the namespacing capabilities, you may want to transfer all content to the base locale.</div>
+      <div class="body-2 red--text"><strong>This operation is destructive and cannot be reversed! Make sure you have proper backups!</strong></div>
+      <v-toolbar class="radius-7 mt-5" flat :color="$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-4`" height="80">
+        <v-select label="Source Locale" outlined hide-details :items="locales" item-text="name" item-value="code" v-model="sourceLocale"></v-select>
+        <v-icon class="mx-3" large>mdi-chevron-right-box-outline</v-icon>
+        <v-select label="Target Locale" outlined hide-details :items="locales" item-text="name" item-value="code" v-model="targetLocale"></v-select>
+      </v-toolbar>
+      <div class="body-2 mt-5">Pages that are already in the target locale will not be touched. If a page already exists at the target, the source page will not be modified as it would create a conflict. If you want to overwrite the target page, you must first delete it.</div>
+      <v-btn class="ml-0 mt-3" outlined color="primary" @click="migrateToLocale" :disabled="loading">
+        <v-icon left>mdi-gesture-double-tap</v-icon><span>Proceed</span>
+      </v-btn>
+      <v-divider class="my-5"></v-divider>
+      <div class="subtitle-1 pb-3 pl-0 primary--text">Purge Page History</div>
+      <div class="body-2">You may want to purge old history for pages to reduce database usage.</div>
+      <div class="body-2">This operation only affects the database and not any history saved by a storage module (e.g. git version history)</div>
+      <v-toolbar class="radius-7 mt-5" flat :color="$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-4`" height="80">
+        <v-select label="Delete history older than..." outlined hide-details :items="purgeHistoryOptions" item-text="title" item-value="key" v-model="purgeHistorySelection"></v-select>
+      </v-toolbar>
+      <v-btn class="ml-0 mt-3" outlined color="primary" @click="purgeHistory" :disabled="loading">
+        <v-icon left>mdi-gesture-double-tap</v-icon><span>Proceed</span>
+      </v-btn>
+    </v-card-text>
+  </v-card>
 </template>
 
 <script>

@@ -1,132 +1,132 @@
-<template lang='pug'>
-  v-app(:dark='$vuetify.theme.dark').history
-    nav-header
-    v-content
-      v-toolbar(color='primary', dark)
-        .subheading Viewing history of #[strong /{{path}}]
-        template(v-if='$vuetify.breakpoint.mdAndUp')
-          v-spacer
-          .caption.blue--text.text--lighten-3.mr-4 Trail Length: {{total}}
-          .caption.blue--text.text--lighten-3 ID: {{pageId}}
-          v-btn.ml-4(depressed, color='blue darken-1', @click='goLive') Return to Live Version
-      v-container(fluid, grid-list-xl)
-        v-layout(row, wrap)
-          v-flex(xs12, md4)
-            v-chip.my-0.ml-6(
-              label
-              small
-              :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
-              :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
-              )
-              span Live
-            v-timeline(
-              dense
-              )
-              v-timeline-item.pb-2(
-                v-for='(ph, idx) in fullTrail'
-                :key='ph.versionId'
-                :small='ph.actionType === `edit`'
-                :color='trailColor(ph.actionType)'
-                :icon='trailIcon(ph.actionType)'
-                )
-                v-card.radius-7(flat, :class='trailBgColor(ph.actionType)')
-                  v-toolbar(flat, :color='trailBgColor(ph.actionType)', height='40')
-                    .caption(:title='$options.filters.moment(ph.versionDate, `LLL`)') {{ ph.versionDate | moment('ll') }}
-                    v-divider.mx-3(vertical)
-                    .caption(v-if='ph.actionType === `edit`') Edited by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `move`') Moved from #[strong {{ph.valueBefore}}] to #[strong {{ph.valueAfter}}] by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `initial`') Created by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `live`') Last Edited by #[strong {{ ph.authorName }}]
-                    .caption(v-else) Unknown Action by #[strong {{ ph.authorName }}]
-                    v-spacer
-                    v-menu(offset-x, left)
-                      template(v-slot:activator='{ on }')
-                        v-btn.mr-2.radius-4(icon, v-on='on', small, tile): v-icon mdi-dots-horizontal
-                      v-list(dense, nav).history-promptmenu
-                        v-list-item(@click='setDiffSource(ph.versionId)', :disabled='(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0')
-                          v-list-item-avatar(size='24'): v-avatar A
-                          v-list-item-title Set as Differencing Source
-                        v-list-item(@click='setDiffTarget(ph.versionId)', :disabled='ph.versionId <= diffSource && ph.versionId !== 0')
-                          v-list-item-avatar(size='24'): v-avatar B
-                          v-list-item-title Set as Differencing Target
-                        v-list-item(@click='viewSource(ph.versionId)')
-                          v-list-item-avatar(size='24'): v-icon mdi-code-tags
-                          v-list-item-title View Source
-                        v-list-item(@click='download(ph.versionId)')
-                          v-list-item-avatar(size='24'): v-icon mdi-cloud-download-outline
-                          v-list-item-title Download Version
-                        v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
-                          v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
-                          v-list-item-title Restore
-                        v-list-item(@click='branchOff(ph.versionId)')
-                          v-list-item-avatar(size='24'): v-icon mdi-source-branch
-                          v-list-item-title Branch off from here
-                    v-btn.mr-2.radius-4(
-                      @click='setDiffSource(ph.versionId)'
-                      icon
-                      small
-                      depressed
-                      tile
-                      :class='diffSource === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
-                      :disabled='(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0'
-                      ): strong A
-                    v-btn.mr-0.radius-4(
-                      @click='setDiffTarget(ph.versionId)'
-                      icon
-                      small
-                      depressed
-                      tile
-                      :class='diffTarget === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
-                      :disabled='ph.versionId <= diffSource && ph.versionId !== 0'
-                      ): strong B
-
-            v-btn.ma-0.radius-7(
-              v-if='total > trail.length'
-              block
-              color='primary'
-              @click='loadMore'
-              )
-              .caption.white--text Load More...
-
-            v-chip.ma-0(
-              v-else
-              label
-              small
-              :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
-              :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
-              ) End of history trail
-
-          v-flex(xs12, md8)
-            v-card.radius-7(:class='$vuetify.breakpoint.mdAndUp ? `mt-8` : ``')
-              v-card-text
-                v-card.grey.radius-7(flat, :class='$vuetify.theme.dark ? `darken-2` : `lighten-4`')
-                  v-row(no-gutters, align='center')
-                    v-col
-                      v-card-text
-                        .subheading {{target.title}}
-                        .caption {{target.description}}
-                    v-col.text-right.py-3(cols='2', v-if='$vuetify.breakpoint.mdAndUp')
-                      v-btn.mr-3(:color='$vuetify.theme.dark ? `white` : `grey darken-3`', small, dark, outlined, @click='toggleViewMode')
-                        v-icon(left) mdi-eye
-                        .overline View Mode
-                v-card.mt-3(light, v-html='diffHTML', flat)
-
-    v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
-      v-card
-        .dialog-header.is-orange {{$t('history:restore.confirmTitle')}}
-        v-card-text.pa-4
-          i18next(tag='span', path='history:restore.confirmText')
-            strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
-        v-card-actions
-          v-spacer
-          v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
-          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') {{$t('history:restore.confirmButton')}}
-
-    page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
-
-    nav-footer
-    notify
-    search-results
+<template>  
+  <v-app class="history" :dark="$vuetify.theme.dark">
+    <nav-header></nav-header>
+    <v-content>
+      <v-toolbar color="primary" dark>
+        <div class="subheading">Viewing history of <strong>/{{path}}</strong></div>
+        <template v-if="$vuetify.breakpoint.mdAndUp">
+          <v-spacer></v-spacer>
+          <div class="caption blue--text text--lighten-3 mr-4">Trail Length: {{total}}</div>
+          <div class="caption blue--text text--lighten-3">ID: {{pageId}}</div>
+          <v-btn class="ml-4" depressed color="blue darken-1" @click="goLive">Return to Live Version</v-btn>
+        </template>
+      </v-toolbar>
+      <v-container fluid grid-list-xl>
+        <v-layout row wrap>
+          <v-flex xs12 md4>
+            <v-chip class="my-0 ml-6" label small :color="$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`" :class="$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`"><span>Live</span></v-chip>
+            <v-timeline dense>
+              <v-timeline-item class="pb-2" v-for="(ph, idx) in fullTrail" :key="ph.versionId" :small="ph.actionType === `edit`" :color="trailColor(ph.actionType)" :icon="trailIcon(ph.actionType)">
+                <v-card class="radius-7" flat :class="trailBgColor(ph.actionType)">
+                  <v-toolbar flat :color="trailBgColor(ph.actionType)" height="40">
+                    <div class="caption" :title="$options.filters.moment(ph.versionDate, `LLL`)">{{ ph.versionDate | moment('ll') }}</div>
+                    <v-divider class="mx-3" vertical></v-divider>
+                    <div class="caption" v-if="ph.actionType === `edit`">Edited by <strong>{{ ph.authorName }}</strong></div>
+                    <div class="caption" v-else-if="ph.actionType === `move`">Moved from <strong>{{ph.valueBefore}}</strong> to <strong>{{ph.valueAfter}}</strong> by <strong>{{ ph.authorName }}</strong></div>
+                    <div class="caption" v-else-if="ph.actionType === `initial`">Created by <strong>{{ ph.authorName }}</strong></div>
+                    <div class="caption" v-else-if="ph.actionType === `live`">Last Edited by <strong>{{ ph.authorName }}</strong></div>
+                    <div class="caption" v-else>Unknown Action by <strong>{{ ph.authorName }}</strong></div>
+                    <v-spacer></v-spacer>
+                    <v-menu offset-x left>
+                      <template v-slot:activator="{ on }">
+                        <v-btn class="mr-2 radius-4" icon v-on="on" small tile>
+                          <v-icon>mdi-dots-horizontal</v-icon>
+                        </v-btn>
+                      </template>
+                      <v-list class="history-promptmenu" dense nav>
+                        <v-list-item @click="setDiffSource(ph.versionId)" :disabled="(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0">
+                          <v-list-item-avatar size="24">
+                            <v-avatar>A</v-avatar>
+                          </v-list-item-avatar>
+                          <v-list-item-title>Set as Differencing Source</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="setDiffTarget(ph.versionId)" :disabled="ph.versionId <= diffSource && ph.versionId !== 0">
+                          <v-list-item-avatar size="24">
+                            <v-avatar>B</v-avatar>
+                          </v-list-item-avatar>
+                          <v-list-item-title>Set as Differencing Target</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="viewSource(ph.versionId)">
+                          <v-list-item-avatar size="24">
+                            <v-icon>mdi-code-tags</v-icon>
+                          </v-list-item-avatar>
+                          <v-list-item-title>View Source</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="download(ph.versionId)">
+                          <v-list-item-avatar size="24">
+                            <v-icon>mdi-cloud-download-outline</v-icon>
+                          </v-list-item-avatar>
+                          <v-list-item-title>Download Version</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="restore(ph.versionId, ph.versionDate)" :disabled="ph.versionId === 0">
+                          <v-list-item-avatar size="24">
+                            <v-icon :disabled="ph.versionId === 0">mdi-history</v-icon>
+                          </v-list-item-avatar>
+                          <v-list-item-title>Restore</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item @click="branchOff(ph.versionId)">
+                          <v-list-item-avatar size="24">
+                            <v-icon>mdi-source-branch</v-icon>
+                          </v-list-item-avatar>
+                          <v-list-item-title>Branch off from here</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                    <v-btn class="mr-2 radius-4" @click="setDiffSource(ph.versionId)" icon small depressed tile :class="diffSource === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)" :disabled="(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0"><strong>A</strong></v-btn>
+                    <v-btn class="mr-0 radius-4" @click="setDiffTarget(ph.versionId)" icon small depressed tile :class="diffTarget === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)" :disabled="ph.versionId <= diffSource && ph.versionId !== 0"><strong>B</strong></v-btn>
+                  </v-toolbar>
+                </v-card>
+              </v-timeline-item>
+            </v-timeline>
+            <v-btn class="ma-0 radius-7" v-if="total > trail.length" block color="primary" @click="loadMore">
+              <div class="caption white--text">Load More...</div>
+            </v-btn>
+            <v-chip class="ma-0" v-else label small :color="$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`" :class="$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`">End of history trail</v-chip>
+          </v-flex>
+          <v-flex xs12 md8>
+            <v-card class="radius-7" :class="$vuetify.breakpoint.mdAndUp ? `mt-8` : ``">
+              <v-card-text>
+                <v-card class="grey radius-7" flat :class="$vuetify.theme.dark ? `darken-2` : `lighten-4`">
+                  <v-row no-gutters align="center">
+                    <v-col>
+                      <v-card-text>
+                        <div class="subheading">{{target.title}}</div>
+                        <div class="caption">{{target.description}}</div>
+                      </v-card-text>
+                    </v-col>
+                    <v-col class="text-right py-3" cols="2" v-if="$vuetify.breakpoint.mdAndUp">
+                      <v-btn class="mr-3" :color="$vuetify.theme.dark ? `white` : `grey darken-3`" small dark outlined @click="toggleViewMode">
+                        <v-icon left>mdi-eye</v-icon>
+                        <div class="overline">View Mode</div>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
+                </v-card>
+                <v-card class="mt-3" light v-html="diffHTML" flat></v-card>
+              </v-card-text>
+            </v-card>
+          </v-flex>
+        </v-layout>
+      </v-container>
+    </v-content>
+    <v-dialog v-model="isRestoreConfirmDialogShown" max-width="650" persistent>
+      <v-card>
+        <div class="dialog-header is-orange">{{$t('history:restore.confirmTitle')}}</div>
+        <v-card-text class="pa-4">
+          <i18next tag="span" path="history:restore.confirmText"><strong place="date">{{ restoreTarget.versionDate | moment('LLL') }}</strong></i18next>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text @click="isRestoreConfirmDialogShown = false" :disabled="restoreLoading">{{$t('common:actions.cancel')}}</v-btn>
+          <v-btn color="orange darken-2" dark @click="restoreConfirm" :loading="restoreLoading">{{$t('history:restore.confirmButton')}}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <page-selector mode="create" v-model="branchOffOpts.modal" :open-handler="branchOffHandle" :path="branchOffOpts.path" :locale="branchOffOpts.locale"></page-selector>
+    <nav-footer></nav-footer>
+    <notify></notify>
+    <search-results></search-results>
+  </v-app>
 </template>
 
 <script>

@@ -1,95 +1,60 @@
-<template lang="pug">
-  div
-    v-dialog(v-model='isShown', max-width='650', persistent)
-      v-card
-        .dialog-header.is-short
-          v-icon.mr-3(color='white') mdi-plus
-          span {{$t('admin:api.newKeyTitle')}}
-        v-card-text.pt-5
-          v-text-field(
-            outlined
-            prepend-icon='mdi-format-title'
-            v-model='name'
-            :label='$t(`admin:api.newKeyName`)'
-            persistent-hint
-            ref='keyNameInput'
-            :hint='$t(`admin:api.newKeyNameHint`)'
-            counter='255'
-            )
-          v-select.mt-3(
-            :items='expirations'
-            outlined
-            prepend-icon='mdi-clock'
-            v-model='expiration'
-            :label='$t(`admin:api.newKeyExpiration`)'
-            :hint='$t(`admin:api.newKeyExpirationHint`)'
-            persistent-hint
-            )
-          v-divider.mt-4
-          v-subheader.pl-2: strong.indigo--text {{$t('admin:api.newKeyPermissionScopes')}}
-          v-list.pl-8(nav)
-            v-list-item-group(v-model='fullAccess')
-              v-list-item(
-                :value='true'
-                active-class='indigo--text'
-                )
-                template(v-slot:default='{ active, toggle }')
-                  v-list-item-action
-                    v-checkbox(
-                      :input-value='active'
-                      :true-value='true'
-                      color='indigo'
-                      @click='toggle'
-                    )
-                  v-list-item-content
-                    v-list-item-title {{$t('admin:api.newKeyFullAccess')}}
-            v-divider.mt-3
-            v-subheader.caption.indigo--text {{$t('admin:api.newKeyGroupPermissions')}}
-            v-list-item
-              v-select(
-                :disabled='fullAccess'
-                :items='groups'
-                item-text='name'
-                item-value='id'
-                outlined
-                color='indigo'
-                v-model='group'
-                :label='$t(`admin:api.newKeyGroup`)'
-                :hint='$t(`admin:api.newKeyGroupHint`)'
-                persistent-hint
-                )
-        v-card-chin
-          v-spacer
-          v-btn(text, @click='isShown = false', :disabled='loading') {{$t('common:actions.cancel')}}
-          v-btn.px-3(depressed, color='primary', @click='generate', :loading='loading')
-            v-icon(left) mdi-chevron-right
-            span {{$t('common:actions.generate')}}
-
-    v-dialog(
-      v-model='isCopyKeyDialogShown'
-      max-width='750'
-      persistent
-      overlay-color='blue darken-5'
-      overlay-opacity='.9'
-      )
-      v-card
-        v-toolbar(dense, flat, color='primary', dark) {{$t('admin:api.newKeyTitle')}}
-        v-card-text.pt-5
-          .body-2.text-center
-            i18next(tag='span', path='admin:api.newKeyCopyWarn')
-              strong(place='bold') {{$t('admin:api.newKeyCopyWarnBold')}}
-          v-textarea.mt-3(
-            ref='keyContentsIpt'
-            filled
-            no-resize
-            readonly
-            v-model='key'
-            :rows='10'
-            hide-details
-          )
-        v-card-chin
-          v-spacer
-          v-btn.px-3(depressed, dark, color='primary', @click='isCopyKeyDialogShown = false') {{$t('common:actions.close')}}
+<template>  
+  <div>
+    <v-dialog v-model="isShown" max-width="650" persistent>
+      <v-card>
+        <div class="dialog-header is-short">
+          <v-icon class="mr-3" color="white">mdi-plus</v-icon><span>{{$t('admin:api.newKeyTitle')}}</span>
+        </div>
+        <v-card-text class="pt-5">
+          <v-text-field outlined prepend-icon="mdi-format-title" v-model="name" :label="$t(`admin:api.newKeyName`)" persistent-hint ref="keyNameInput" :hint="$t(`admin:api.newKeyNameHint`)" counter="255"></v-text-field>
+          <v-select class="mt-3" :items="expirations" outlined prepend-icon="mdi-clock" v-model="expiration" :label="$t(`admin:api.newKeyExpiration`)" :hint="$t(`admin:api.newKeyExpirationHint`)" persistent-hint></v-select>
+          <v-divider class="mt-4"></v-divider>
+          <v-subheader class="pl-2"><strong class="indigo--text">{{$t('admin:api.newKeyPermissionScopes')}}</strong></v-subheader>
+          <v-list class="pl-8" nav>
+            <v-list-item-group v-model="fullAccess">
+              <v-list-item :value="true" active-class="indigo--text">
+                <template v-slot:default="{ active, toggle }">
+                  <v-list-item-action>
+                    <v-checkbox :input-value="active" :true-value="true" color="indigo" @click="toggle"></v-checkbox>
+                  </v-list-item-action>
+                  <v-list-item-content>
+                    <v-list-item-title>{{$t('admin:api.newKeyFullAccess')}}</v-list-item-title>
+                  </v-list-item-content>
+                </template>
+              </v-list-item>
+            </v-list-item-group>
+            <v-divider class="mt-3"></v-divider>
+            <v-subheader class="caption indigo--text">{{$t('admin:api.newKeyGroupPermissions')}}</v-subheader>
+            <v-list-item>
+              <v-select :disabled="fullAccess" :items="groups" item-text="name" item-value="id" outlined color="indigo" v-model="group" :label="$t(`admin:api.newKeyGroup`)" :hint="$t(`admin:api.newKeyGroupHint`)" persistent-hint></v-select>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+        <v-card-chin>
+          <v-spacer></v-spacer>
+          <v-btn text @click="isShown = false" :disabled="loading">{{$t('common:actions.cancel')}}</v-btn>
+          <v-btn class="px-3" depressed color="primary" @click="generate" :loading="loading">
+            <v-icon left>mdi-chevron-right</v-icon><span>{{$t('common:actions.generate')}}</span>
+          </v-btn>
+        </v-card-chin>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="isCopyKeyDialogShown" max-width="750" persistent overlay-color="blue darken-5" overlay-opacity=".9">
+      <v-card>
+        <v-toolbar dense flat color="primary" dark>{{$t('admin:api.newKeyTitle')}}</v-toolbar>
+        <v-card-text class="pt-5">
+          <div class="body-2 text-center">
+            <i18next tag="span" path="admin:api.newKeyCopyWarn"><strong place="bold">{{$t('admin:api.newKeyCopyWarnBold')}}</strong></i18next>
+          </div>
+          <v-textarea class="mt-3" ref="keyContentsIpt" filled no-resize readonly v-model="key" :rows="10" hide-details></v-textarea>
+        </v-card-text>
+        <v-card-chin>
+          <v-spacer></v-spacer>
+          <v-btn class="px-3" depressed dark color="primary" @click="isCopyKeyDialogShown = false">{{$t('common:actions.close')}}</v-btn>
+        </v-card-chin>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script>

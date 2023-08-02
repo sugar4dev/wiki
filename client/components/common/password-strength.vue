@@ -1,11 +1,8 @@
-<template lang="pug">
-  .password-strength
-    v-progress-linear(
-      :color='passwordStrengthColor'
-      v-model='passwordStrength'
-      height='2'
-    )
-    .caption(v-if='!hideText', :class='passwordStrengthColor + "--text"') {{passwordStrengthText}}
+<template>  
+  <div class="password-strength">
+    <v-progress-linear :color="passwordStrengthColor" v-model="passwordStrength" height="2"></v-progress-linear>
+    <div class="caption" v-if="!hideText" :class="passwordStrengthColor + '--text'">{{passwordStrengthText}}</div>
+  </div>
 </template>
 
 <script>

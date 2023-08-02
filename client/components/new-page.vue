@@ -1,16 +1,18 @@
-<template lang='pug'>
-  v-app
-    .newpage
-      .newpage-content
-        img.animated.fadeIn(src='/_assets/svg/icon-delete-file.svg', alt='Not Found')
-        .headline {{ $t('newpage.title') }}
-        .subtitle-1.mt-3 {{ $t('newpage.subtitle') }}
-        v-btn.mt-5(:href='`/e/` + locale + `/` + path', x-large)
-          v-icon(left) mdi-plus
-          span {{ $t('newpage.create') }}
-        v-btn.mt-5(color='purple lighten-3', href='javascript:window.history.go(-1);', outlined)
-          v-icon(left) mdi-arrow-left
-          span {{ $t('newpage.goback') }}
+<template>  
+  <v-app>
+    <div class="newpage">
+      <div class="newpage-content"><img class="animated fadeIn" src="/_assets/svg/icon-delete-file.svg" alt="Not Found">
+        <div class="headline">{{ $t('newpage.title') }}</div>
+        <div class="subtitle-1 mt-3">{{ $t('newpage.subtitle') }}</div>
+        <v-btn class="mt-5" :href="`/e/` + locale + `/` + path" x-large>
+          <v-icon left>mdi-plus</v-icon><span>{{ $t('newpage.create') }}</span>
+        </v-btn>
+        <v-btn class="mt-5" color="purple lighten-3" href="javascript:window.history.go(-1);" outlined>
+          <v-icon left>mdi-arrow-left</v-icon><span>{{ $t('newpage.goback') }}</span>
+        </v-btn>
+      </div>
+    </div>
+  </v-app>
 </template>
 
 <script>

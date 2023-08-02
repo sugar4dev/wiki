@@ -1,10 +1,7 @@
-<template lang='pug'>
-  v-card.editor-modal-drawio.animated.fadeIn(flat, tile)
-    iframe(
-      ref='drawio'
-      src='https://embed.diagrams.net/?embed=1&proto=json&spin=1&saveAndExit=1&noSaveBtn=1&noExitBtn=0'
-      frameborder='0'
-    )
+<template>  
+  <v-card class="editor-modal-drawio animated fadeIn" flat tile>
+    <iframe ref="drawio" src="https://embed.diagrams.net/?embed=1&amp;proto=json&amp;spin=1&amp;saveAndExit=1&amp;noSaveBtn=1&amp;noExitBtn=0" frameborder="0"></iframe>
+  </v-card>
 </template>
 
 <script>

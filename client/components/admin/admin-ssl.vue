@@ -1,125 +1,133 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row wrap)
-      v-flex(xs12)
-        .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-validation.svg', alt='SSL', style='width: 80px;')
-          .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:ssl.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:ssl.subtitle') }}
-          v-spacer
-          v-btn.animated.fadeInDown(
-            v-if='info.sslProvider === `letsencrypt` && info.httpsPort > 0'
-            color='black'
-            dark
-            depressed
-            @click='renewCertificate'
-            large
-            :loading='loadingRenew'
-            )
-            v-icon(left) mdi-cached
-            span {{$t('admin:ssl.renewCertificate')}}
-        v-form.pt-3
-          v-layout(row wrap)
-            v-flex(lg6 xs12)
-              v-card.animated.fadeInUp
-                v-subheader {{ $t('admin:ssl.currentState') }}
-                v-list(two-line, dense)
-                  v-list-item
-                    v-list-item-avatar
-                      v-icon.indigo.white--text mdi-handshake
-                    v-list-item-content
-                      v-list-item-title {{ $t(`admin:ssl.provider`) }}
-                      v-list-item-subtitle {{ providerTitle }}
-                  template(v-if='info.sslProvider === `letsencrypt` && info.httpsPort > 0')
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.indigo.white--text mdi-application
-                      v-list-item-content
-                        v-list-item-title {{ $t(`admin:ssl.domain`) }}
-                        v-list-item-subtitle {{ info.sslDomain }}
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.indigo.white--text mdi-at
-                      v-list-item-content
-                        v-list-item-title {{ $t('admin:ssl.subscriberEmail') }}
-                        v-list-item-subtitle {{ info.sslSubscriberEmail }}
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.indigo.white--text mdi-calendar-remove-outline
-                      v-list-item-content
-                        v-list-item-title {{ $t('admin:ssl.expiration') }}
-                        v-list-item-subtitle {{ info.sslExpirationDate | moment('calendar') }}
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.indigo.white--text mdi-traffic-light
-                      v-list-item-content
-                        v-list-item-title {{ $t(`admin:ssl.status`) }}
-                        v-list-item-subtitle {{ info.sslStatus }}
-
-            v-flex(lg6 xs12)
-              v-card.animated.fadeInUp.wait-p2s
-                v-subheader {{ $t('admin:ssl.ports') }}
-                v-list(two-line, dense)
-                  v-list-item
-                    v-list-item-avatar
-                      v-icon.blue.white--text mdi-lock-open-variant
-                    v-list-item-content
-                      v-list-item-title {{ $t(`admin:ssl.httpPort`) }}
-                      v-list-item-subtitle {{ info.httpPort }}
-                  template(v-if='info.httpsPort > 0')
-                    v-divider
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.green.white--text mdi-lock
-                      v-list-item-content
-                        v-list-item-title {{ $t(`admin:ssl.httpsPort`) }}
-                        v-list-item-subtitle {{ info.httpsPort }}
-                    v-divider
-                    v-list-item
-                      v-list-item-avatar
-                        v-icon.indigo.white--text mdi-sign-direction
-                      v-list-item-content
-                        v-list-item-title {{ $t(`admin:ssl.httpPortRedirect`) }}
-                        v-list-item-subtitle {{ info.httpRedirection }}
-                      v-list-item-action
-                        v-btn.red--text(
-                          v-if='info.httpRedirection'
-                          depressed
-                          :color='$vuetify.theme.dark ? `red darken-4` : `red lighten-5`'
-                          :class='$vuetify.theme.dark ? `text--lighten-5` : `text--darken-2`'
-                          @click='toggleRedir'
-                          :loading='loadingRedir'
-                          )
-                          v-icon(left) mdi-power
-                          span {{$t('admin:ssl.httpPortRedirectTurnOff')}}
-                        v-btn.green--text(
-                          v-else
-                          depressed
-                          :color='$vuetify.theme.dark ? `green darken-4` : `green lighten-5`'
-                          :class='$vuetify.theme.dark ? `text--lighten-5` : `text--darken-2`'
-                          @click='toggleRedir'
-                          :loading='loadingRedir'
-                          )
-                          v-icon(left) mdi-power
-                          span {{$t('admin:ssl.httpPortRedirectTurnOn')}}
-
-    v-dialog(
-      v-model='loadingRenew'
-      persistent
-      max-width='450'
-      )
-      v-card(color='black', dark)
-        v-card-text.pa-10.text-center
-          semipolar-spinner.animated.fadeIn(
-            :animation-duration='1500'
-            :size='65'
-            color='#FFF'
-            style='margin: 0 auto;'
-          )
-          .mt-5.body-1.white--text {{$t('admin:ssl.renewCertificateLoadingTitle')}}
-          .caption.mt-4 {{$t('admin:ssl.renewCertificateLoadingSubtitle')}}
-
+<template>  
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img class="animated fadeInUp" src="/_assets/svg/icon-validation.svg" alt="SSL" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{ $t('admin:ssl.title') }}</div>
+            <div class="subtitle-1 grey--text animated fadeInLeft">{{ $t('admin:ssl.subtitle') }}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn class="animated fadeInDown" v-if="info.sslProvider === `letsencrypt` && info.httpsPort > 0" color="black" dark depressed @click="renewCertificate" large :loading="loadingRenew">
+            <v-icon left>mdi-cached</v-icon><span>{{$t('admin:ssl.renewCertificate')}}</span>
+          </v-btn>
+        </div>
+        <v-form class="pt-3">
+          <v-layout row wrap>
+            <v-flex lg6 xs12>
+              <v-card class="animated fadeInUp">
+                <v-subheader>{{ $t('admin:ssl.currentState') }}</v-subheader>
+                <v-list two-line dense>
+                  <v-list-item>
+                    <v-list-item-avatar>
+                      <v-icon class="indigo white--text">mdi-handshake</v-icon>
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title>{{ $t(`admin:ssl.provider`) }}</v-list-item-title>
+                      <v-list-item-subtitle>{{ providerTitle }}</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <template v-if="info.sslProvider === `letsencrypt` && info.httpsPort > 0">
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="indigo white--text">mdi-application</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t(`admin:ssl.domain`) }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.sslDomain }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="indigo white--text">mdi-at</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t('admin:ssl.subscriberEmail') }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.sslSubscriberEmail }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="indigo white--text">mdi-calendar-remove-outline</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t('admin:ssl.expiration') }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.sslExpirationDate | moment('calendar') }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="indigo white--text">mdi-traffic-light</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t(`admin:ssl.status`) }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.sslStatus }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </template>
+                </v-list>
+              </v-card>
+            </v-flex>
+            <v-flex lg6 xs12>
+              <v-card class="animated fadeInUp wait-p2s">
+                <v-subheader>{{ $t('admin:ssl.ports') }}</v-subheader>
+                <v-list two-line dense>
+                  <v-list-item>
+                    <v-list-item-avatar>
+                      <v-icon class="blue white--text">mdi-lock-open-variant</v-icon>
+                    </v-list-item-avatar>
+                    <v-list-item-content>
+                      <v-list-item-title>{{ $t(`admin:ssl.httpPort`) }}</v-list-item-title>
+                      <v-list-item-subtitle>{{ info.httpPort }}</v-list-item-subtitle>
+                    </v-list-item-content>
+                  </v-list-item>
+                  <template v-if="info.httpsPort > 0">
+                    <v-divider></v-divider>
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="green white--text">mdi-lock</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t(`admin:ssl.httpsPort`) }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.httpsPort }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-divider></v-divider>
+                    <v-list-item>
+                      <v-list-item-avatar>
+                        <v-icon class="indigo white--text">mdi-sign-direction</v-icon>
+                      </v-list-item-avatar>
+                      <v-list-item-content>
+                        <v-list-item-title>{{ $t(`admin:ssl.httpPortRedirect`) }}</v-list-item-title>
+                        <v-list-item-subtitle>{{ info.httpRedirection }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                      <v-list-item-action>
+                        <v-btn class="red--text" v-if="info.httpRedirection" depressed :color="$vuetify.theme.dark ? `red darken-4` : `red lighten-5`" :class="$vuetify.theme.dark ? `text--lighten-5` : `text--darken-2`" @click="toggleRedir" :loading="loadingRedir">
+                          <v-icon left>mdi-power</v-icon><span>{{$t('admin:ssl.httpPortRedirectTurnOff')}}</span>
+                        </v-btn>
+                        <v-btn class="green--text" v-else depressed :color="$vuetify.theme.dark ? `green darken-4` : `green lighten-5`" :class="$vuetify.theme.dark ? `text--lighten-5` : `text--darken-2`" @click="toggleRedir" :loading="loadingRedir">
+                          <v-icon left>mdi-power</v-icon><span>{{$t('admin:ssl.httpPortRedirectTurnOn')}}</span>
+                        </v-btn>
+                      </v-list-item-action>
+                    </v-list-item>
+                  </template>
+                </v-list>
+              </v-card>
+            </v-flex>
+          </v-layout>
+        </v-form>
+      </v-flex>
+    </v-layout>
+    <v-dialog v-model="loadingRenew" persistent max-width="450">
+      <v-card color="black" dark>
+        <v-card-text class="pa-10 text-center">
+          <semipolar-spinner class="animated fadeIn" :animation-duration="1500" :size="65" color="#FFF" style="margin: 0 auto;"></semipolar-spinner>
+          <div class="mt-5 body-1 white--text">{{$t('admin:ssl.renewCertificateLoadingTitle')}}</div>
+          <div class="caption mt-4">{{$t('admin:ssl.renewCertificateLoadingSubtitle')}}</div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>
 
 <script>

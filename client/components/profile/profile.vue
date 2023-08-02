@@ -1,345 +1,255 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row wrap)
-      v-flex(xs12)
-        .profile-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-profile.svg', alt='Users', style='width: 80px;')
-          .profile-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('profile:title')}}
-            .subheading.grey--text.animated.fadeInLeft {{$t('profile:subtitle')}}
-          v-spacer
-          v-btn.animated.fadeInDown(color='success', depressed, @click='saveProfile', :loading='saveLoading', large)
-            v-icon(left) mdi-check
-            span {{$t('common:actions.save')}}
-          //- v-btn.animated.fadeInDown(outlined, color='primary', disabled).mr-0
-          //-   v-icon(left) mdi-earth
-          //-   span {{$t('profile:viewPublicProfile')}}
-      v-flex(lg6 xs12)
-        v-card.animated.fadeInUp
-          v-toolbar(color='blue-grey', dark, dense, flat)
-            v-toolbar-title.subtitle-1 {{$t('profile:myInfo')}}
-          v-list(two-line, dense)
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-account
-              v-list-item-content
-                v-list-item-title {{$t('profile:displayName')}}
-                v-list-item-subtitle {{ user.name }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.name'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptDisplayName`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card
-                    v-text-field(
-                      ref='iptDisplayName'
-                      v-model='user.name'
-                      :label='$t(`profile:displayName`)'
-                      solo
-                      hide-details
-                      append-icon='mdi-check'
-                      @click:append='editPop.name = false'
-                      @keydown.13='editPop.name = false'
-                      @keydown.esc='editPop.name = false'
-                    )
-            v-divider
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-map-marker
-              v-list-item-content
-                v-list-item-title {{$t('profile:location')}}
-                v-list-item-subtitle {{ user.location }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.location'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptLocation`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card
-                    v-text-field(
-                      ref='iptLocation'
-                      v-model='user.location'
-                      :label='$t(`profile:location`)'
-                      solo
-                      hide-details
-                      append-icon='mdi-check'
-                      @click:append='editPop.location = false'
-                      @keydown.13='editPop.location = false'
-                      @keydown.esc='editPop.location = false'
-                    )
-            v-divider
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-briefcase
-              v-list-item-content
-                v-list-item-title {{$t('profile:jobTitle')}}
-                v-list-item-subtitle {{ user.jobTitle }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.jobTitle'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptJobTitle`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card
-                    v-text-field(
-                      ref='iptJobTitle'
-                      v-model='user.jobTitle'
-                      :label='$t(`profile:jobTitle`)'
-                      solo
-                      hide-details
-                      append-icon='mdi-check'
-                      @click:append='editPop.jobTitle = false'
-                      @keydown.13='editPop.jobTitle = false'
-                      @keydown.esc='editPop.jobTitle = false'
-                    )
-
-        v-card.mt-3.animated.fadeInUp.wait-p2s
-          v-toolbar(color='blue-grey', dark, dense, flat)
-            v-toolbar-title
-              .subtitle-1 {{$t('profile:auth.title')}}
-          v-card-text.pt-0
-            v-subheader.pl-0: span.subtitle-2 {{$t('profile:auth.provider')}}
-            v-toolbar(
-              flat
-              :color='$vuetify.theme.dark ? "grey darken-2" : "purple lighten-5"'
-              dense
-              :class='$vuetify.theme.dark ? "grey--text text--lighten-1" : "purple--text text--darken-4"'
-              )
-              v-icon(:color='$vuetify.theme.dark ? "grey lighten-1" : "purple darken-4"') mdi-shield-lock
-              .subheading.ml-3 {{ user.providerName }}
-            //- v-divider.mt-3
-            //- v-subheader.pl-0: span.subtitle-2 Two-Factor Authentication (2FA)
-            //- .caption.mb-2 2FA adds an extra layer of security by requiring a unique code generated on your smartphone when signing in.
-            //- v-btn(color='purple darken-4', disabled).ml-0 Enable 2FA
-            //- v-btn(color='purple darken-4', dark, depressed, disabled).ml-0 Disable 2FA
-            template(v-if='user.providerKey === `local`')
-              v-divider.mt-3
-              v-subheader.pl-0: span.subtitle-2 {{$t('profile:auth.changePassword')}}
-              v-text-field(
-                ref='iptCurrentPass'
-                v-model='currentPass'
-                outlined
-                :label='$t(`profile:auth.currentPassword`)'
-                type='password'
-                prepend-inner-icon='mdi-form-textbox-password'
-                )
-              v-text-field(
-                ref='iptNewPass'
-                v-model='newPass'
-                outlined
-                :label='$t(`profile:auth.newPassword`)'
-                type='password'
-                prepend-inner-icon='mdi-form-textbox-password'
-                autocomplete='off'
-                counter='255'
-                loading
-                )
-                password-strength(slot='progress', v-model='newPass')
-              v-text-field(
-                ref='iptVerifyPass'
-                v-model='verifyPass'
-                outlined
-                :label='$t(`profile:auth.verifyPassword`)'
-                type='password'
-                prepend-inner-icon='mdi-form-textbox-password'
-                autocomplete='off'
-                hide-details
-                )
-          v-card-chin(v-if='user.providerKey === `local`')
-            v-spacer
-            v-btn.px-4(color='purple darken-4', dark, depressed, @click='changePassword', :loading='changePassLoading')
-              v-icon(left) mdi-progress-check
-              span {{$t('profile:auth.changePassword')}}
-      v-flex(lg6 xs12)
-        //- v-card
-        //-   v-toolbar(color='blue-grey', dark, dense, flat)
-        //-     v-toolbar-title
-        //-       .subtitle-1 Picture
-        //-   v-card-title
-        //-     v-avatar.blue(v-if='picture.kind === `initials`', :size='40')
-        //-       span.white--text.subheading {{picture.initials}}
-        //-     v-avatar(v-else-if='picture.kind === `image`', :size='40')
-        //-       v-img(:src='picture.url')
-        //-     v-btn(outlined).mx-4 Upload Picture
-        //-     v-btn(outlined, disabled) Remove Picture
-        v-card.animated.fadeInUp.wait-p2s
-          v-toolbar(color='blue-grey', dark, dense, flat)
-            v-toolbar-title.subtitle-1 {{$t('profile:preferences')}}
-          v-list(two-line, dense)
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-map-clock-outline
-              v-list-item-content
-                v-list-item-title {{$t('profile:timezone')}}
-                v-list-item-subtitle {{ user.timezone }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.timezone'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  max-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptTimezone`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card(flat)
-                    v-select(
-                      ref='iptTimezone'
-                      :items='timezones'
-                      v-model='user.timezone'
-                      :label='$t(`profile:timezone`)'
-                      solo
-                      flat
-                      dense
-                      hide-details
-                      @keydown.13='editPop.timezone = false'
-                      @keydown.esc='editPop.timezone = false'
-                      style='height: 38px;'
-                    )
-                    v-card-chin
-                      v-spacer
-                      v-btn(
-                        small
-                        text
-                        color='primary'
-                        @click='editPop.timezone = false'
-                        )
-                        v-icon(left) mdi-check
-                        span {{$t('common:actions.ok')}}
-            v-divider
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-calendar-month-outline
-              v-list-item-content
-                v-list-item-title {{$t('profile:dateFormat')}}
-                v-list-item-subtitle {{ user.dateFormat && user.dateFormat.length > 0 ? user.dateFormat : $t('profile:localeDefault') }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.dateFormat'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  max-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptDateFormat`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card(flat)
-                    v-select(
-                      ref='iptDateFormat'
-                      :items='dateFormats'
-                      v-model='user.dateFormat'
-                      :label='$t(`profile:dateFormat`)'
-                      solo
-                      flat
-                      dense
-                      hide-details
-                      @keydown.13='editPop.dateFormat = false'
-                      @keydown.esc='editPop.dateFormat = false'
-                      style='height: 38px;'
-                    )
-                    v-card-chin
-                      v-spacer
-                      v-btn(
-                        small
-                        text
-                        color='primary'
-                        @click='editPop.dateFormat = false'
-                        )
-                        v-icon(left) mdi-check
-                        span {{$t('common:actions.ok')}}
-            v-divider
-            v-list-item
-              v-list-item-avatar(size='32')
-                v-icon mdi-palette
-              v-list-item-content
-                v-list-item-title {{$t('profile:appearance')}}
-                v-list-item-subtitle {{ currentAppearance }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.appearance'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  max-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptAppearance`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card(flat)
-                    v-select(
-                      ref='iptAppearance'
-                      :items='appearances'
-                      v-model='user.appearance'
-                      :label='$t(`profile:appearance`)'
-                      solo
-                      flat
-                      dense
-                      hide-details
-                      @keydown.13='editPop.appearance = false'
-                      @keydown.esc='editPop.appearance = false'
-                      style='height: 38px;'
-                    )
-                    v-card-chin
-                      v-spacer
-                      v-btn(
-                        small
-                        text
-                        color='primary'
-                        @click='editPop.appearance = false'
-                        )
-                        v-icon(left) mdi-check
-                        span {{$t('common:actions.ok')}}
-
-        v-card.mt-3.animated.fadeInUp.wait-p3s
-          v-toolbar(color='primary', dark, dense, flat)
-            v-toolbar-title
-              .subtitle-1 {{$t('profile:groups.title')}}
-          v-list(dense)
-            template(v-for='(grp, idx) of user.groups')
-              v-list-item(:key='`grp-id-` + grp')
-                v-list-item-avatar(size='32')
-                  v-icon mdi-account-group
-                v-list-item-content
-                  v-list-item-title.body-2 {{grp}}
-              v-divider(v-if='idx < user.groups.length - 1')
-
-        v-card.mt-3.animated.fadeInUp.wait-p4s
-          v-toolbar(color='teal', dark, dense, flat)
-            v-toolbar-title
-              .subtitle-1 {{$t('profile:activity.title')}}
-          v-card-text.grey--text.text--darken-2
-            .caption.grey--text {{$t('profile:activity.joinedOn')}}
-            .body-2: strong {{ user.createdAt | moment('LLLL') }}
-            .caption.grey--text.mt-3 {{$t('profile:activity.lastUpdatedOn')}}
-            .body-2: strong {{ user.updatedAt | moment('LLLL') }}
-            .caption.grey--text.mt-3 {{$t('profile:activity.lastLoginOn')}}
-            .body-2: strong {{ user.lastLoginAt | moment('LLLL') }}
-            v-divider.mt-3
-            .caption.grey--text.mt-3 {{$t('profile:activity.pagesCreated')}}
-            .body-2: strong {{ user.pagesTotal }}
-            .caption.grey--text.mt-3 {{$t('profile:activity.commentsPosted')}}
-            .body-2: strong 0
+<template>  
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="profile-header"><img class="animated fadeInUp" src="/_assets/svg/icon-profile.svg" alt="Users" style="width: 80px;">
+          <div class="profile-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{$t('profile:title')}}</div>
+            <div class="subheading grey--text animated fadeInLeft">{{$t('profile:subtitle')}}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn class="animated fadeInDown" color="success" depressed @click="saveProfile" :loading="saveLoading" large>
+            <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.save')}}</span>
+          </v-btn>
+        </div>
+      </v-flex>
+      <v-flex lg6 xs12>
+        <v-card class="animated fadeInUp">
+          <v-toolbar color="blue-grey" dark dense flat>
+            <v-toolbar-title class="subtitle-1">{{$t('profile:myInfo')}}</v-toolbar-title>
+          </v-toolbar>
+          <v-list two-line dense>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-account</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:displayName')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ user.name }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.name" :close-on-content-click="false" min-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptDisplayName`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-text-field ref="iptDisplayName" v-model="user.name" :label="$t(`profile:displayName`)" solo hide-details append-icon="mdi-check" @click:append="editPop.name = false" @keydown.13="editPop.name = false" @keydown.esc="editPop.name = false"></v-text-field>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-map-marker</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:location')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ user.location }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.location" :close-on-content-click="false" min-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptLocation`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-text-field ref="iptLocation" v-model="user.location" :label="$t(`profile:location`)" solo hide-details append-icon="mdi-check" @click:append="editPop.location = false" @keydown.13="editPop.location = false" @keydown.esc="editPop.location = false"></v-text-field>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-briefcase</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:jobTitle')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ user.jobTitle }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.jobTitle" :close-on-content-click="false" min-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptJobTitle`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <v-text-field ref="iptJobTitle" v-model="user.jobTitle" :label="$t(`profile:jobTitle`)" solo hide-details append-icon="mdi-check" @click:append="editPop.jobTitle = false" @keydown.13="editPop.jobTitle = false" @keydown.esc="editPop.jobTitle = false"></v-text-field>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <v-card class="mt-3 animated fadeInUp wait-p2s">
+          <v-toolbar color="blue-grey" dark dense flat>
+            <v-toolbar-title>
+              <div class="subtitle-1">{{$t('profile:auth.title')}}</div>
+            </v-toolbar-title>
+          </v-toolbar>
+          <v-card-text class="pt-0">
+            <v-subheader class="pl-0"><span class="subtitle-2">{{$t('profile:auth.provider')}}</span></v-subheader>
+            <v-toolbar flat :color="$vuetify.theme.dark ? 'grey darken-2' : 'purple lighten-5'" dense :class="$vuetify.theme.dark ? 'grey--text text--lighten-1' : 'purple--text text--darken-4'">
+              <v-icon :color="$vuetify.theme.dark ? 'grey lighten-1' : 'purple darken-4'">mdi-shield-lock</v-icon>
+              <div class="subheading ml-3">{{ user.providerName }}</div>
+            </v-toolbar>
+            <template v-if="user.providerKey === `local`">
+              <v-divider class="mt-3"></v-divider>
+              <v-subheader class="pl-0"><span class="subtitle-2">{{$t('profile:auth.changePassword')}}</span></v-subheader>
+              <v-text-field ref="iptCurrentPass" v-model="currentPass" outlined :label="$t(`profile:auth.currentPassword`)" type="password" prepend-inner-icon="mdi-form-textbox-password"></v-text-field>
+              <v-text-field ref="iptNewPass" v-model="newPass" outlined :label="$t(`profile:auth.newPassword`)" type="password" prepend-inner-icon="mdi-form-textbox-password" autocomplete="off" counter="255" loading>
+                <password-strength slot="progress" v-model="newPass"></password-strength>
+              </v-text-field>
+              <v-text-field ref="iptVerifyPass" v-model="verifyPass" outlined :label="$t(`profile:auth.verifyPassword`)" type="password" prepend-inner-icon="mdi-form-textbox-password" autocomplete="off" hide-details></v-text-field>
+            </template>
+          </v-card-text>
+          <v-card-chin v-if="user.providerKey === `local`">
+            <v-spacer></v-spacer>
+            <v-btn class="px-4" color="purple darken-4" dark depressed @click="changePassword" :loading="changePassLoading">
+              <v-icon left>mdi-progress-check</v-icon><span>{{$t('profile:auth.changePassword')}}</span>
+            </v-btn>
+          </v-card-chin>
+        </v-card>
+      </v-flex>
+      <v-flex lg6 xs12>
+        <v-card class="animated fadeInUp wait-p2s">
+          <v-toolbar color="blue-grey" dark dense flat>
+            <v-toolbar-title class="subtitle-1">{{$t('profile:preferences')}}</v-toolbar-title>
+          </v-toolbar>
+          <v-list two-line dense>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-map-clock-outline</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:timezone')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ user.timezone }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.timezone" :close-on-content-click="false" min-width="350" max-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptTimezone`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card flat>
+                    <v-select ref="iptTimezone" :items="timezones" v-model="user.timezone" :label="$t(`profile:timezone`)" solo flat dense hide-details @keydown.13="editPop.timezone = false" @keydown.esc="editPop.timezone = false" style="height: 38px;"></v-select>
+                    <v-card-chin>
+                      <v-spacer></v-spacer>
+                      <v-btn small text color="primary" @click="editPop.timezone = false">
+                        <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.ok')}}</span>
+                      </v-btn>
+                    </v-card-chin>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-calendar-month-outline</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:dateFormat')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ user.dateFormat && user.dateFormat.length > 0 ? user.dateFormat : $t('profile:localeDefault') }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.dateFormat" :close-on-content-click="false" min-width="350" max-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptDateFormat`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card flat>
+                    <v-select ref="iptDateFormat" :items="dateFormats" v-model="user.dateFormat" :label="$t(`profile:dateFormat`)" solo flat dense hide-details @keydown.13="editPop.dateFormat = false" @keydown.esc="editPop.dateFormat = false" style="height: 38px;"></v-select>
+                    <v-card-chin>
+                      <v-spacer></v-spacer>
+                      <v-btn small text color="primary" @click="editPop.dateFormat = false">
+                        <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.ok')}}</span>
+                      </v-btn>
+                    </v-card-chin>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item>
+              <v-list-item-avatar size="32">
+                <v-icon>mdi-palette</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title>{{$t('profile:appearance')}}</v-list-item-title>
+                <v-list-item-subtitle>{{ currentAppearance }}</v-list-item-subtitle>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-menu v-model="editPop.appearance" :close-on-content-click="false" min-width="350" max-width="350" left>
+                  <template v-slot:activator="{ on }">
+                    <v-btn text color="grey" small v-on="on" @click="focusField(`iptAppearance`)">
+                      <v-icon left>mdi-pencil</v-icon><span>{{ $t('common:actions:edit') }}</span>
+                    </v-btn>
+                  </template>
+                  <v-card flat>
+                    <v-select ref="iptAppearance" :items="appearances" v-model="user.appearance" :label="$t(`profile:appearance`)" solo flat dense hide-details @keydown.13="editPop.appearance = false" @keydown.esc="editPop.appearance = false" style="height: 38px;"></v-select>
+                    <v-card-chin>
+                      <v-spacer></v-spacer>
+                      <v-btn small text color="primary" @click="editPop.appearance = false">
+                        <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.ok')}}</span>
+                      </v-btn>
+                    </v-card-chin>
+                  </v-card>
+                </v-menu>
+              </v-list-item-action>
+            </v-list-item>
+          </v-list>
+        </v-card>
+        <v-card class="mt-3 animated fadeInUp wait-p3s">
+          <v-toolbar color="primary" dark dense flat>
+            <v-toolbar-title>
+              <div class="subtitle-1">{{$t('profile:groups.title')}}</div>
+            </v-toolbar-title>
+          </v-toolbar>
+          <v-list dense>
+            <template v-for="(grp, idx) of user.groups">
+              <v-list-item :key="`grp-id-` + grp">
+                <v-list-item-avatar size="32">
+                  <v-icon>mdi-account-group</v-icon>
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title class="body-2">{{grp}}</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+              <v-divider v-if="idx < user.groups.length - 1"></v-divider>
+            </template>
+          </v-list>
+        </v-card>
+        <v-card class="mt-3 animated fadeInUp wait-p4s">
+          <v-toolbar color="teal" dark dense flat>
+            <v-toolbar-title>
+              <div class="subtitle-1">{{$t('profile:activity.title')}}</div>
+            </v-toolbar-title>
+          </v-toolbar>
+          <v-card-text class="grey--text text--darken-2">
+            <div class="caption grey--text">{{$t('profile:activity.joinedOn')}}</div>
+            <div class="body-2"><strong>{{ user.createdAt | moment('LLLL') }}</strong></div>
+            <div class="caption grey--text mt-3">{{$t('profile:activity.lastUpdatedOn')}}</div>
+            <div class="body-2"><strong>{{ user.updatedAt | moment('LLLL') }}</strong></div>
+            <div class="caption grey--text mt-3">{{$t('profile:activity.lastLoginOn')}}</div>
+            <div class="body-2"><strong>{{ user.lastLoginAt | moment('LLLL') }}</strong></div>
+            <v-divider class="mt-3"></v-divider>
+            <div class="caption grey--text mt-3">{{$t('profile:activity.pagesCreated')}}</div>
+            <div class="body-2"><strong>{{ user.pagesTotal }}</strong></div>
+            <div class="caption grey--text mt-3">{{$t('profile:activity.commentsPosted')}}</div>
+            <div class="body-2"><strong>0</strong></div>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>

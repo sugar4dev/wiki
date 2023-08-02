@@ -1,15 +1,19 @@
-<template lang="pug">
-  v-dialog(v-model='isShown', max-width='550')
-    v-card
-      .dialog-header.is-short.is-red
-        v-icon.mr-2(color='white') mdi-alert
-        span {{$t('editor:unsaved.title')}}
-      v-card-text.pt-4
-        .body-2 {{$t('editor:unsaved.body')}}
-      v-card-chin
-        v-spacer
-        v-btn(text, @click='isShown = false') {{$t('common:actions.cancel')}}
-        v-btn.px-4(color='red', @click='discard', dark) {{$t('common:actions.discardChanges')}}
+<template>  
+  <v-dialog v-model="isShown" max-width="550">
+    <v-card>
+      <div class="dialog-header is-short is-red">
+        <v-icon class="mr-2" color="white">mdi-alert</v-icon><span>{{$t('editor:unsaved.title')}}</span>
+      </div>
+      <v-card-text class="pt-4">
+        <div class="body-2">{{$t('editor:unsaved.body')}}</div>
+      </v-card-text>
+      <v-card-chin>
+        <v-spacer></v-spacer>
+        <v-btn text @click="isShown = false">{{$t('common:actions.cancel')}}</v-btn>
+        <v-btn class="px-4" color="red" @click="discard" dark>{{$t('common:actions.discardChanges')}}</v-btn>
+      </v-card-chin>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

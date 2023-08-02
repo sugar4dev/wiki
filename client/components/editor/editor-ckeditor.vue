@@ -1,17 +1,20 @@
-<template lang='pug'>
-  .editor-ckeditor
-    div(ref='toolbarContainer')
-    div.contents(ref='editor')
-    v-system-bar.editor-ckeditor-sysbar(dark, status, color='grey darken-3')
-      .caption.editor-ckeditor-sysbar-locale {{locale.toUpperCase()}}
-      .caption.px-3 /{{path}}
-      template(v-if='$vuetify.breakpoint.mdAndUp')
-        v-spacer
-        .caption Visual Editor
-        v-spacer
-        .caption {{$t('editor:ckeditor.stats', { chars: stats.characters, words: stats.words })}}
-    editor-conflict(v-model='isConflict', v-if='isConflict')
-    page-selector(mode='select', v-model='insertLinkDialog', :open-handler='insertLinkHandler', :path='path', :locale='locale')
+<template>  
+  <div class="editor-ckeditor">
+    <div ref="toolbarContainer"></div>
+    <div class="contents" ref="editor"></div>
+    <v-system-bar class="editor-ckeditor-sysbar" dark status color="grey darken-3">
+      <div class="caption editor-ckeditor-sysbar-locale">{{locale.toUpperCase()}}</div>
+      <div class="caption px-3">/{{path}}</div>
+      <template v-if="$vuetify.breakpoint.mdAndUp">
+        <v-spacer></v-spacer>
+        <div class="caption">Visual Editor</div>
+        <v-spacer></v-spacer>
+        <div class="caption">{{$t('editor:ckeditor.stats', { chars: stats.characters, words: stats.words })}}</div>
+      </template>
+    </v-system-bar>
+    <editor-conflict v-model="isConflict" v-if="isConflict"></editor-conflict>
+    <page-selector mode="select" v-model="insertLinkDialog" :open-handler="insertLinkHandler" :path="path" :locale="locale"></page-selector>
+  </div>
 </template>
 
 <script>

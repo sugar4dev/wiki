@@ -1,34 +1,25 @@
-<template lang='pug'>
-  v-dialog(
-    v-model='isShown'
-    max-width='550'
-    persistent
-    overlay-color='blue-grey darken-4'
-    overlay-opacity='.7'
-    )
-    v-card
-      .dialog-header.is-short.is-dark
-        v-icon.mr-2(color='white') mdi-lightning-bolt
-        span {{$t('common:page.convert')}}
-      v-card-text.pt-5
-        i18next.body-2(path='common:page.convertTitle', tag='div')
-          span.blue-grey--text.text--darken-2(place='title') {{pageTitle}}
-        v-select.mt-5(
-          :items=`[
+<template>  
+  <v-dialog v-model="isShown" max-width="550" persistent overlay-color="blue-grey darken-4" overlay-opacity=".7">
+    <v-card>
+      <div class="dialog-header is-short is-dark">
+        <v-icon class="mr-2" color="white">mdi-lightning-bolt</v-icon><span>{{$t('common:page.convert')}}</span>
+      </div>
+      <v-card-text class="pt-5">
+        <i18next class="body-2" path="common:page.convertTitle" tag="div"><span class="blue-grey--text text--darken-2" place="title">{{pageTitle}}</span></i18next>
+        <v-select class="mt-5" :items="[
             { value: 'markdown', text: 'Markdown' },
             { value: 'ckeditor', text: 'Visual Editor' },
             { value: 'code', text: 'Raw HTML' }
-          ]`
-          outlined
-          dense
-          hide-details
-          v-model='newEditor'
-        )
-        .caption.mt-5 {{$t('common:page.convertSubtitle')}}
-      v-card-chin
-        v-spacer
-        v-btn(text, @click='discard', :disabled='loading') {{$t('common:actions.cancel')}}
-        v-btn.px-4(color='grey darken-3', @click='convertPage', :loading='loading').white--text {{$t('common:actions.convert')}}
+          ]" outlined dense hide-details v-model="newEditor"></v-select>
+        <div class="caption mt-5">{{$t('common:page.convertSubtitle')}}</div>
+      </v-card-text>
+      <v-card-chin>
+        <v-spacer></v-spacer>
+        <v-btn text @click="discard" :disabled="loading">{{$t('common:actions.cancel')}}</v-btn>
+        <v-btn class="px-4 white--text" color="grey darken-3" @click="convertPage" :loading="loading">{{$t('common:actions.convert')}}</v-btn>
+      </v-card-chin>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

@@ -1,30 +1,35 @@
-<template lang='pug'>
-  v-app(:dark='$vuetify.theme.dark').source
-    nav-header
-    v-content
-      v-toolbar(color='primary', dark)
-        i18next.subheading(v-if='versionId > 0', path='common:page.viewingSourceVersion', tag='div')
-          strong(place='date', :title='$options.filters.moment(versionDate, `LLL`)') {{versionDate | moment('lll')}}
-          strong(place='path') /{{path}}
-        i18next.subheading(v-else, path='common:page.viewingSource', tag='div')
-          strong(place='path') /{{path}}
-        template(v-if='$vuetify.breakpoint.mdAndUp')
-          v-spacer
-          .caption.blue--text.text--lighten-3 {{$t('common:page.id', { id: pageId })}}
-          .caption.blue--text.text--lighten-3.ml-4(v-if='versionId > 0') {{$t('common:page.versionId', { id: versionId })}}
-          v-btn.ml-4(v-if='versionId > 0', depressed, color='blue darken-1', @click='goHistory')
-            v-icon mdi-history
-          v-btn.ml-4(depressed, color='blue darken-1', @click='goLive') {{$t('common:page.returnNormalView')}}
-      v-card(tile)
-        v-card-text
-          v-card.grey.radius-7(flat, :class='$vuetify.theme.dark ? `darken-4` : `lighten-4`')
-            v-card-text
-              pre
-                slot
-
-    nav-footer
-    notify
-    search-results
+<template>  
+  <v-app class="source" :dark="$vuetify.theme.dark">
+    <nav-header></nav-header>
+    <v-content>
+      <v-toolbar color="primary" dark>
+        <i18next class="subheading" v-if="versionId > 0" path="common:page.viewingSourceVersion" tag="div"><strong place="date" :title="$options.filters.moment(versionDate, `LLL`)">{{versionDate | moment('lll')}}</strong><strong place="path">/{{path}}</strong></i18next>
+        <i18next class="subheading" v-else path="common:page.viewingSource" tag="div"><strong place="path">/{{path}}</strong></i18next>
+        <template v-if="$vuetify.breakpoint.mdAndUp">
+          <v-spacer></v-spacer>
+          <div class="caption blue--text text--lighten-3">{{$t('common:page.id', { id: pageId })}}</div>
+          <div class="caption blue--text text--lighten-3 ml-4" v-if="versionId > 0">{{$t('common:page.versionId', { id: versionId })}}</div>
+          <v-btn class="ml-4" v-if="versionId > 0" depressed color="blue darken-1" @click="goHistory">
+            <v-icon>mdi-history</v-icon>
+          </v-btn>
+          <v-btn class="ml-4" depressed color="blue darken-1" @click="goLive">{{$t('common:page.returnNormalView')}}</v-btn>
+        </template>
+      </v-toolbar>
+      <v-card tile>
+        <v-card-text>
+          <v-card class="grey radius-7" flat :class="$vuetify.theme.dark ? `darken-4` : `lighten-4`">
+            <v-card-text>
+              <pre>
+                <slot></slot></pre>
+            </v-card-text>
+          </v-card>
+        </v-card-text>
+      </v-card>
+    </v-content>
+    <nav-footer></nav-footer>
+    <notify></notify>
+    <search-results></search-results>
+  </v-app>
 </template>
 
 <script>

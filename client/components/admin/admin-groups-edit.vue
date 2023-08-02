@@ -1,96 +1,88 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row wrap)
-      v-flex(xs12)
-        .admin-header
-          img(src='/_assets/svg/icon-social-group.svg', alt='Edit Group', style='width: 80px;')
-          .admin-header-title
-            .headline.blue--text.text--darken-2 Edit Group
-            .subtitle-1.grey--text {{group.name}}
-          v-spacer
-          v-btn(color='grey', icon, outlined, to='/groups')
-            v-icon mdi-arrow-left
-          v-dialog(v-model='deleteGroupDialog', max-width='500', v-if='!group.isSystem')
-            template(v-slot:activator='{ on }')
-              v-btn.ml-3(color='red', icon, outlined, v-on='on')
-                v-icon(color='red') mdi-trash-can-outline
-            v-card
-              .dialog-header.is-red Delete Group?
-              v-card-text.pa-4 Are you sure you want to delete group #[strong {{ group.name }}]? All users will be unassigned from this group.
-              v-card-actions
-                v-spacer
-                v-btn(text, @click='deleteGroupDialog = false') Cancel
-                v-btn(color='red', dark, @click='deleteGroup') Delete
-          v-btn.ml-3(color='success', large, depressed, @click='updateGroup')
-            v-icon(left) mdi-check
-            span Update Group
-        v-card.mt-3
-          v-tabs.grad-tabs(v-model='tab', :color='$vuetify.theme.dark ? `blue` : `primary`', fixed-tabs, show-arrows, icons-and-text)
-            v-tab(key='settings')
-              span Settings
-              v-icon mdi-cog-box
-            v-tab(key='permissions')
-              span Permissions
-              v-icon mdi-lock-pattern
-            v-tab(key='rules')
-              span Page Rules
-              v-icon mdi-file-lock
-            v-tab(key='users')
-              span Users
-              v-icon mdi-account-group
-
-            v-tab-item(key='settings', :transition='false', :reverse-transition='false')
-              v-card(flat)
-                template(v-if='group.id <= 2')
-                  v-card-text
-                    v-alert.radius-7.mb-0(
-                      color='orange darken-2'
-                      :class='$vuetify.theme.dark ? "grey darken-4" : "orange lighten-5"'
-                      outlined
-                      :value='true'
-                      icon='mdi-lock-outline'
-                      ) This is a system group and its settings cannot be modified.
-                  v-divider
-                v-card-text
-                  v-text-field(
-                    outlined
-                    v-model='group.name'
-                    label='Group Name'
-                    hide-details
-                    prepend-icon='mdi-account-group'
-                    style='max-width: 600px;'
-                    :disabled='group.id <= 2'
-                  )
-                template(v-if='group.id !== 2')
-                  v-divider
-                  v-card-text
-                    v-text-field(
-                      outlined
-                      v-model='group.redirectOnLogin'
-                      label='Redirect on Login'
-                      persistent-hint
-                      hint='The path / URL where the user will be redirected upon successful login.'
-                      prepend-icon='mdi-arrow-top-left-thick'
-                      append-icon='mdi-folder-search'
-                      @click:append='selectPage'
-                      style='max-width: 850px;'
-                      :counter='255'
-                    )
-
-            v-tab-item(key='permissions', :transition='false', :reverse-transition='false')
-              group-permissions(v-model='group', @refresh='refresh')
-
-            v-tab-item(key='rules', :transition='false', :reverse-transition='false')
-              group-rules(v-model='group', @refresh='refresh')
-
-            v-tab-item(key='users', :transition='false', :reverse-transition='false')
-              group-users(v-model='group', @refresh='refresh')
-
-          v-card-chin
-            v-spacer
-            .caption.grey--text.pr-2 Group ID #[strong {{group.id}}]
-
-    page-selector(mode='select', v-model='selectPageModal', :open-handler='selectPageHandle', path='home', :locale='currentLang')
+<template>  
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img src="/_assets/svg/icon-social-group.svg" alt="Edit Group" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline blue--text text--darken-2">Edit Group</div>
+            <div class="subtitle-1 grey--text">{{group.name}}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" icon outlined to="/groups">
+            <v-icon>mdi-arrow-left</v-icon>
+          </v-btn>
+          <v-dialog v-model="deleteGroupDialog" max-width="500" v-if="!group.isSystem">
+            <template v-slot:activator="{ on }">
+              <v-btn class="ml-3" color="red" icon outlined v-on="on">
+                <v-icon color="red">mdi-trash-can-outline</v-icon>
+              </v-btn>
+            </template>
+            <v-card>
+              <div class="dialog-header is-red">Delete Group?</div>
+              <v-card-text class="pa-4">Are you sure you want to delete group <strong>{{ group.name }}</strong>? All users will be unassigned from this group.</v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text @click="deleteGroupDialog = false">Cancel</v-btn>
+                <v-btn color="red" dark @click="deleteGroup">Delete</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+          <v-btn class="ml-3" color="success" large depressed @click="updateGroup">
+            <v-icon left>mdi-check</v-icon><span>Update Group</span>
+          </v-btn>
+        </div>
+        <v-card class="mt-3">
+          <v-tabs class="grad-tabs" v-model="tab" :color="$vuetify.theme.dark ? `blue` : `primary`" fixed-tabs show-arrows icons-and-text>
+            <v-tab key="settings"><span>Settings</span>
+              <v-icon>mdi-cog-box</v-icon>
+            </v-tab>
+            <v-tab key="permissions"><span>Permissions</span>
+              <v-icon>mdi-lock-pattern</v-icon>
+            </v-tab>
+            <v-tab key="rules"><span>Page Rules</span>
+              <v-icon>mdi-file-lock</v-icon>
+            </v-tab>
+            <v-tab key="users"><span>Users</span>
+              <v-icon>mdi-account-group</v-icon>
+            </v-tab>
+            <v-tab-item key="settings" :transition="false" :reverse-transition="false">
+              <v-card flat>
+                <template v-if="group.id <= 2">
+                  <v-card-text>
+                    <v-alert class="radius-7 mb-0" color="orange darken-2" :class="$vuetify.theme.dark ? 'grey darken-4' : 'orange lighten-5'" outlined :value="true" icon="mdi-lock-outline">This is a system group and its settings cannot be modified.</v-alert>
+                  </v-card-text>
+                  <v-divider></v-divider>
+                </template>
+                <v-card-text>
+                  <v-text-field outlined v-model="group.name" label="Group Name" hide-details prepend-icon="mdi-account-group" style="max-width: 600px;" :disabled="group.id <= 2"></v-text-field>
+                </v-card-text>
+                <template v-if="group.id !== 2">
+                  <v-divider></v-divider>
+                  <v-card-text>
+                    <v-text-field outlined v-model="group.redirectOnLogin" label="Redirect on Login" persistent-hint hint="The path / URL where the user will be redirected upon successful login." prepend-icon="mdi-arrow-top-left-thick" append-icon="mdi-folder-search" @click:append="selectPage" style="max-width: 850px;" :counter="255"></v-text-field>
+                  </v-card-text>
+                </template>
+              </v-card>
+            </v-tab-item>
+            <v-tab-item key="permissions" :transition="false" :reverse-transition="false">
+              <group-permissions v-model="group" @refresh="refresh"></group-permissions>
+            </v-tab-item>
+            <v-tab-item key="rules" :transition="false" :reverse-transition="false">
+              <group-rules v-model="group" @refresh="refresh"></group-rules>
+            </v-tab-item>
+            <v-tab-item key="users" :transition="false" :reverse-transition="false">
+              <group-users v-model="group" @refresh="refresh"></group-users>
+            </v-tab-item>
+          </v-tabs>
+          <v-card-chin>
+            <v-spacer></v-spacer>
+            <div class="caption grey--text pr-2">Group ID <strong>{{group.id}}</strong></div>
+          </v-card-chin>
+        </v-card>
+      </v-flex>
+    </v-layout>
+    <page-selector mode="select" v-model="selectPageModal" :open-handler="selectPageHandle" path="home" :locale="currentLang"></page-selector>
+  </v-container>
 </template>
 
 <script>

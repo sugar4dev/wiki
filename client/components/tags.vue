@@ -1,153 +1,116 @@
-<template lang='pug'>
-  v-app(:dark='$vuetify.theme.dark').tags
-    nav-header
-    v-navigation-drawer.pb-0.elevation-1(app, fixed, clipped, :right='$vuetify.rtl', permanent, width='300')
-      vue-scroll(:ops='scrollStyle')
-        v-list(dense, nav)
-          v-list-item(href='/')
-            v-list-item-icon: v-icon mdi-home
-            v-list-item-title {{$t('common:header.home')}}
-          template(v-for='(tags, groupName) in tagsGrouped')
-            v-divider.my-2
-            v-subheader.pl-4(:key='`tagGroup-` + groupName') {{groupName}}
-            v-list-item(v-for='tag of tags', @click='toggleTag(tag.tag)', :key='`tag-` + tag.tag')
-              v-list-item-icon
-                v-icon(v-if='isSelected(tag.tag)', color='primary') mdi-checkbox-intermediate
-                v-icon(v-else) mdi-checkbox-blank-outline
-              v-list-item-title {{tag.title}}
-    v-content.grey(:class='$vuetify.theme.dark ? `darken-4-d5` : `lighten-3`')
-      v-toolbar(color='primary', dark, flat, height='58')
-        template(v-if='selection.length > 0')
-          .overline.mr-3.animated.fadeInLeft {{$t('tags:currentSelection')}}
-          v-chip.mr-3.primary--text(
-            v-for='tag of tagsSelected'
-            :key='`tagSelected-` + tag.tag'
-            color='white'
-            close
-            @click:close='toggleTag(tag.tag)'
-            ) {{tag.title}}
-          v-spacer
-          v-btn.animated.fadeIn(
-            small
-            outlined
-            color='blue lighten-4'
-            rounded
-            @click='selection = []'
-            )
-            v-icon(left) mdi-close
-            span {{$t('tags:clearSelection')}}
-        template(v-else)
-          v-icon.mr-3.animated.fadeInRight mdi-arrow-left
-          .overline.animated.fadeInRight {{$t('tags:selectOneMoreTags')}}
-      v-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-l5` : `grey lighten-4`', flat, height='58')
-        v-text-field.tags-search(
-          v-model='innerSearch'
-          :label='$t(`tags:searchWithinResultsPlaceholder`)'
-          solo
-          hide-details
-          flat
-          rounded
-          single-line
-          height='40'
-          prepend-icon='mdi-text-box-search-outline'
-          append-icon='mdi-arrow-right'
-          clearable
-        )
-        template(v-if='locales.length > 1')
-          v-divider.mx-3(vertical)
-          .overline {{$t('tags:locale')}}
-          v-select.ml-2(
-            :items='locales'
-            v-model='locale'
-            :background-color='$vuetify.theme.dark ? `grey darken-3` : `white`'
-            hide-details
-            :label='$t(`tags:locale`)'
-            item-text='name'
-            item-value='code'
-            rounded
-            single-line
-            dense
-            height='40'
-            style='max-width: 170px;'
-          )
-        v-divider.mx-3(vertical)
-        .overline {{$t('tags:orderBy')}}
-        v-select.ml-2(
-          :items='orderByItems'
-          v-model='orderBy'
-          :background-color='$vuetify.theme.dark ? `grey darken-3` : `white`'
-          hide-details
-          :label='$t(`tags:orderBy`)'
-          rounded
-          single-line
-          dense
-          height='40'
-          style='max-width: 250px;'
-        )
-        v-btn-toggle.ml-2(v-model='orderByDirection', rounded, mandatory)
-          v-btn(text, height='40'): v-icon(size='20') mdi-chevron-double-up
-          v-btn(text, height='40'): v-icon(size='20') mdi-chevron-double-down
-      v-divider
-      .text-center.pt-10(v-if='selection.length < 1')
-        img(src='/_assets/svg/icon-price-tag.svg')
-        .subtitle-2.grey--text {{$t('tags:selectOneMoreTagsHint')}}
-      .px-5.py-2(v-else)
-        v-data-iterator(
-          :items='pages'
-          :items-per-page='4'
-          :search='innerSearch'
-          :loading='isLoading'
-          :options.sync='pagination'
-          hide-default-footer
-          ref='dude'
-          )
-          template(v-slot:loading)
-            .text-center.pt-10
-              v-progress-circular(
-                indeterminate
-                color='primary'
-                size='96'
-                width='2'
-                )
-              .subtitle-2.grey--text.mt-5 {{$t('tags:retrievingResultsLoading')}}
-          template(v-slot:no-data)
-            .text-center.pt-10
-              img(src='/_assets/svg/icon-info.svg')
-              .subtitle-2.grey--text {{$t('tags:noResults')}}
-          template(v-slot:no-results)
-            .text-center.pt-10
-              img(src='/_assets/svg/icon-info.svg')
-              .subtitle-2.grey--text {{$t('tags:noResultsWithFilter')}}
-          template(v-slot:default='props')
-            v-row(align='stretch')
-              v-col(
-                v-for='item of props.items'
-                :key='`page-` + item.id'
-                cols='12'
-                lg='6'
-                )
-                v-card.radius-7(
-                  @click='goTo(item)'
-                  style='height:100%;'
-                  :class='$vuetify.theme.dark ? `grey darken-4` : ``'
-                  )
-                  v-card-text
-                    .d-flex.flex-row.align-center
-                      .body-1: strong.primary--text {{item.title}}
-                      v-spacer
-                      i18next.caption(tag='div', path='tags:pageLastUpdated')
-                        span(place='date') {{item.updatedAt | moment('from')}}
-                    .body-2.grey--text {{item.description || '---'}}
-                    v-divider.my-2
-                    .d-flex.flex-row.align-center
-                      v-chip(small, label, :color='$vuetify.theme.dark ? `grey darken-3-l5` : `grey lighten-4`').overline {{item.locale}}
-                      .caption.ml-1 / {{item.path}}
-        .text-center.py-2.animated.fadeInDown(v-if='this.pageTotal > 1')
-          v-pagination(v-model='pagination.page', :length='pageTotal')
-
-    nav-footer
-    notify
-    search-results
+<template>  
+  <v-app class="tags" :dark="$vuetify.theme.dark">
+    <nav-header></nav-header>
+    <v-navigation-drawer class="pb-0 elevation-1" app fixed clipped :right="$vuetify.rtl" permanent width="300">
+      <vue-scroll :ops="scrollStyle">
+        <v-list dense nav>
+          <v-list-item href="/">
+            <v-list-item-icon>
+              <v-icon>mdi-home</v-icon>
+            </v-list-item-icon>
+            <v-list-item-title>{{$t('common:header.home')}}</v-list-item-title>
+          </v-list-item>
+          <template v-for="(tags, groupName) in tagsGrouped">
+            <v-divider class="my-2"></v-divider>
+            <v-subheader class="pl-4" :key="`tagGroup-` + groupName">{{groupName}}</v-subheader>
+            <v-list-item v-for="tag of tags" @click="toggleTag(tag.tag)" :key="`tag-` + tag.tag">
+              <v-list-item-icon>
+                <v-icon v-if="isSelected(tag.tag)" color="primary">mdi-checkbox-intermediate</v-icon>
+                <v-icon v-else>mdi-checkbox-blank-outline</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title>{{tag.title}}</v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-list>
+      </vue-scroll>
+    </v-navigation-drawer>
+    <v-content class="grey" :class="$vuetify.theme.dark ? `darken-4-d5` : `lighten-3`">
+      <v-toolbar color="primary" dark flat height="58">
+        <template v-if="selection.length > 0">
+          <div class="overline mr-3 animated fadeInLeft">{{$t('tags:currentSelection')}}</div>
+          <v-chip class="mr-3 primary--text" v-for="tag of tagsSelected" :key="`tagSelected-` + tag.tag" color="white" close @click:close="toggleTag(tag.tag)">{{tag.title}}</v-chip>
+          <v-spacer></v-spacer>
+          <v-btn class="animated fadeIn" small outlined color="blue lighten-4" rounded @click="selection = []">
+            <v-icon left>mdi-close</v-icon><span>{{$t('tags:clearSelection')}}</span>
+          </v-btn>
+        </template>
+        <template v-else>
+          <v-icon class="mr-3 animated fadeInRight">mdi-arrow-left</v-icon>
+          <div class="overline animated fadeInRight">{{$t('tags:selectOneMoreTags')}}</div>
+        </template>
+      </v-toolbar>
+      <v-toolbar :color="$vuetify.theme.dark ? `grey darken-4-l5` : `grey lighten-4`" flat height="58">
+        <v-text-field class="tags-search" v-model="innerSearch" :label="$t(`tags:searchWithinResultsPlaceholder`)" solo hide-details flat rounded single-line height="40" prepend-icon="mdi-text-box-search-outline" append-icon="mdi-arrow-right" clearable></v-text-field>
+        <template v-if="locales.length > 1">
+          <v-divider class="mx-3" vertical></v-divider>
+          <div class="overline">{{$t('tags:locale')}}</div>
+          <v-select class="ml-2" :items="locales" v-model="locale" :background-color="$vuetify.theme.dark ? `grey darken-3` : `white`" hide-details :label="$t(`tags:locale`)" item-text="name" item-value="code" rounded single-line dense height="40" style="max-width: 170px;"></v-select>
+        </template>
+        <v-divider class="mx-3" vertical></v-divider>
+        <div class="overline">{{$t('tags:orderBy')}}</div>
+        <v-select class="ml-2" :items="orderByItems" v-model="orderBy" :background-color="$vuetify.theme.dark ? `grey darken-3` : `white`" hide-details :label="$t(`tags:orderBy`)" rounded single-line dense height="40" style="max-width: 250px;"></v-select>
+        <v-btn-toggle class="ml-2" v-model="orderByDirection" rounded mandatory>
+          <v-btn text height="40">
+            <v-icon size="20">mdi-chevron-double-up</v-icon>
+          </v-btn>
+          <v-btn text height="40">
+            <v-icon size="20">mdi-chevron-double-down</v-icon>
+          </v-btn>
+        </v-btn-toggle>
+      </v-toolbar>
+      <v-divider></v-divider>
+      <div class="text-center pt-10" v-if="selection.length < 1"><img src="/_assets/svg/icon-price-tag.svg">
+        <div class="subtitle-2 grey--text">{{$t('tags:selectOneMoreTagsHint')}}</div>
+      </div>
+      <div class="px-5 py-2" v-else>
+        <v-data-iterator :items="pages" :items-per-page="4" :search="innerSearch" :loading="isLoading" :options.sync="pagination" hide-default-footer ref="dude">
+          <template v-slot:loading>
+            <div class="text-center pt-10">
+              <v-progress-circular indeterminate color="primary" size="96" width="2"></v-progress-circular>
+              <div class="subtitle-2 grey--text mt-5">{{$t('tags:retrievingResultsLoading')}}</div>
+            </div>
+          </template>
+          <template v-slot:no-data>
+            <div class="text-center pt-10"><img src="/_assets/svg/icon-info.svg">
+              <div class="subtitle-2 grey--text">{{$t('tags:noResults')}}</div>
+            </div>
+          </template>
+          <template v-slot:no-results>
+            <div class="text-center pt-10"><img src="/_assets/svg/icon-info.svg">
+              <div class="subtitle-2 grey--text">{{$t('tags:noResultsWithFilter')}}</div>
+            </div>
+          </template>
+          <template v-slot:default="props">
+            <v-row align="stretch">
+              <v-col v-for="item of props.items" :key="`page-` + item.id" cols="12" lg="6">
+                <v-card class="radius-7" @click="goTo(item)" style="height:100%;" :class="$vuetify.theme.dark ? `grey darken-4` : ``">
+                  <v-card-text>
+                    <div class="d-flex flex-row align-center">
+                      <div class="body-1"><strong class="primary--text">{{item.title}}</strong></div>
+                      <v-spacer></v-spacer>
+                      <i18next class="caption" tag="div" path="tags:pageLastUpdated"><span place="date">{{item.updatedAt | moment('from')}}</span></i18next>
+                    </div>
+                    <div class="body-2 grey--text">{{item.description || '---'}}</div>
+                    <v-divider class="my-2"></v-divider>
+                    <div class="d-flex flex-row align-center">
+                      <v-chip class="overline" small label :color="$vuetify.theme.dark ? `grey darken-3-l5` : `grey lighten-4`">{{item.locale}}</v-chip>
+                      <div class="caption ml-1">/ {{item.path}}</div>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </template>
+        </v-data-iterator>
+        <div class="text-center py-2 animated fadeInDown" v-if="this.pageTotal > 1">
+          <v-pagination v-model="pagination.page" :length="pageTotal"></v-pagination>
+        </div>
+      </div>
+    </v-content>
+    <nav-footer></nav-footer>
+    <notify></notify>
+    <search-results></search-results>
+  </v-app>
 </template>
 
 <script>

@@ -1,130 +1,85 @@
-<template lang='pug'>
-  .editor-redirect
-    .editor-redirect-main
-      .editor-redirect-editor
-        v-container.px-2.pt-1(fluid)
-          v-row(dense)
-            v-col(
-              cols='12'
-              lg='8'
-              offset-lg='2'
-              xl='6'
-              offset-xl='3'
-              )
-              v-card.pt-2
-                v-card-text
-                  .pb-1
-                    .subtitle-2.primary--text When a user reaches this page
-                    .caption.grey--text.text--darken-1 and matches one of these rules...
-                  v-timeline(dense)
-                    v-slide-x-reverse-transition(group, hide-on-leave)
-                      v-timeline-item(
-                        key='cond-add-new'
-                        hide-dot
-                        )
-                        v-btn(
-                          color='primary'
-                          @click=''
-                          )
-                          v-icon(left) mdi-plus
-                          span Add Conditional Rule
-                      v-timeline-item(
-                        key='cond-none'
-                        small
-                        color='grey'
-                        )
-                        v-card.grey.lighten-5(flat)
-                          v-card-text
-                            .body-2: strong No conditional rule
-                            em Add conditional rules to direct users to a different page based on their group.
-                      v-timeline-item(
-                        key='cond-rule-1'
-                        small
-                        color='primary'
-                        )
-                        v-card.blue-grey.lighten-5(flat)
-                          v-card-text
-                            .d-flex.align-center
-                              .body-2: strong User is a member of any of these groups:
-                              v-select.ml-3(
-                                color='primary'
-                                :items='groups'
-                                item-text='name'
-                                item-value='id'
-                                multiple
-                                solo
-                                flat
-                                hide-details
-                                dense
-                                chips
-                                small-chips
-                                )
-                            v-divider.my-3
-                            .d-flex.align-center
-                              .body-2.mr-3 then redirect to
-                              v-btn-toggle.mr-3(
-                                v-model='fallbackMode'
-                                mandatory
-                                color='primary'
-                                borderless
-                                dense
-                                )
-                                v-btn.text-none(value='page') Page
-                                v-btn.text-none(value='url') External URL
-                              v-btn.mr-3(
-                                v-if='fallbackMode === `page`'
-                                color='primary'
-                                )
-                                v-icon(left) mdi-magnify
-                                span Select Page...
-                              v-text-field(
-                                v-if='fallbackMode === `url`'
-                                label='External URL'
-                                outlined
-                                hint='Required - Title of the API'
-                                hide-details
-                                v-model='fallbackUrl'
-                                dense
-                                single-line
-                              )
-                  v-divider.mb-5
-                  .subtitle-2.primary--text Otherwise, redirect to...
-                  .caption.grey--text.text--darken-1.pb-2 This fallback rule is mandatory and used if none of the conditional rules above applies.
-                  .d-flex.align-center
-                    v-btn-toggle.mr-3(
-                      v-model='fallbackMode'
-                      mandatory
-                      color='primary'
-                      borderless
-                      dense
-                      )
-                      v-btn.text-none(value='page') Page
-                      v-btn.text-none(value='url') External URL
-                    v-btn.mr-3(
-                      v-if='fallbackMode === `page`'
-                      color='primary'
-                      )
-                      v-icon(left) mdi-magnify
-                      span Select Page...
-                    v-text-field(
-                      v-if='fallbackMode === `url`'
-                      label='External URL'
-                      outlined
-                      hint='Required - Title of the API'
-                      hide-details
-                      v-model='fallbackUrl'
-                      dense
-                      single-line
-                    )
-
-    v-system-bar.editor-redirect-sysbar(dark, status, color='grey darken-3')
-      .caption.editor-redirect-sysbar-locale {{locale.toUpperCase()}}
-      .caption.px-3 /{{path}}
-      template(v-if='$vuetify.breakpoint.mdAndUp')
-        v-spacer
-        .caption Redirect
-        v-spacer
-        .caption 0 rules
+<template>  
+  <div class="editor-redirect">
+    <div class="editor-redirect-main">
+      <div class="editor-redirect-editor">
+        <v-container class="px-2 pt-1" fluid>
+          <v-row dense>
+            <v-col cols="12" lg="8" offset-lg="2" xl="6" offset-xl="3">
+              <v-card class="pt-2">
+                <v-card-text>
+                  <div class="pb-1">
+                    <div class="subtitle-2 primary--text">When a user reaches this page</div>
+                    <div class="caption grey--text text--darken-1">and matches one of these rules...</div>
+                  </div>
+                  <v-timeline dense>
+                    <v-slide-x-reverse-transition group hide-on-leave>
+                      <v-timeline-item key="cond-add-new" hide-dot>
+                        <v-btn color="primary" @click="">
+                          <v-icon left>mdi-plus</v-icon><span>Add Conditional Rule</span>
+                        </v-btn>
+                      </v-timeline-item>
+                      <v-timeline-item key="cond-none" small color="grey">
+                        <v-card class="grey lighten-5" flat>
+                          <v-card-text>
+                            <div class="body-2"><strong>No conditional rule</strong></div><em>Add conditional rules to direct users to a different page based on their group.</em>
+                          </v-card-text>
+                        </v-card>
+                      </v-timeline-item>
+                      <v-timeline-item key="cond-rule-1" small color="primary">
+                        <v-card class="blue-grey lighten-5" flat>
+                          <v-card-text>
+                            <div class="d-flex align-center">
+                              <div class="body-2"><strong>User is a member of any of these groups:</strong></div>
+                              <v-select class="ml-3" color="primary" :items="groups" item-text="name" item-value="id" multiple solo flat hide-details dense chips small-chips></v-select>
+                            </div>
+                            <v-divider class="my-3"></v-divider>
+                            <div class="d-flex align-center">
+                              <div class="body-2 mr-3">then redirect to</div>
+                              <v-btn-toggle class="mr-3" v-model="fallbackMode" mandatory color="primary" borderless dense>
+                                <v-btn class="text-none" value="page">Page</v-btn>
+                                <v-btn class="text-none" value="url">External URL</v-btn>
+                              </v-btn-toggle>
+                              <v-btn class="mr-3" v-if="fallbackMode === `page`" color="primary">
+                                <v-icon left>mdi-magnify</v-icon><span>Select Page...</span>
+                              </v-btn>
+                              <v-text-field v-if="fallbackMode === `url`" label="External URL" outlined hint="Required - Title of the API" hide-details v-model="fallbackUrl" dense single-line></v-text-field>
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-timeline-item>
+                    </v-slide-x-reverse-transition>
+                  </v-timeline>
+                  <v-divider class="mb-5"></v-divider>
+                  <div class="subtitle-2 primary--text">Otherwise, redirect to...</div>
+                  <div class="caption grey--text text--darken-1 pb-2">This fallback rule is mandatory and used if none of the conditional rules above applies.</div>
+                  <div class="d-flex align-center">
+                    <v-btn-toggle class="mr-3" v-model="fallbackMode" mandatory color="primary" borderless dense>
+                      <v-btn class="text-none" value="page">Page</v-btn>
+                      <v-btn class="text-none" value="url">External URL</v-btn>
+                    </v-btn-toggle>
+                    <v-btn class="mr-3" v-if="fallbackMode === `page`" color="primary">
+                      <v-icon left>mdi-magnify</v-icon><span>Select Page...</span>
+                    </v-btn>
+                    <v-text-field v-if="fallbackMode === `url`" label="External URL" outlined hint="Required - Title of the API" hide-details v-model="fallbackUrl" dense single-line></v-text-field>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </div>
+    </div>
+    <v-system-bar class="editor-redirect-sysbar" dark status color="grey darken-3">
+      <div class="caption editor-redirect-sysbar-locale">{{locale.toUpperCase()}}</div>
+      <div class="caption px-3">/{{path}}</div>
+      <template v-if="$vuetify.breakpoint.mdAndUp">
+        <v-spacer></v-spacer>
+        <div class="caption">Redirect</div>
+        <v-spacer></v-spacer>
+        <div class="caption">0 rules</div>
+      </template>
+    </v-system-bar>
+  </div>
 </template>
 
 <script>

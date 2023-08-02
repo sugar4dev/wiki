@@ -1,22 +1,25 @@
-<template lang='pug'>
-  v-card.editor-modal-blocks.animated.fadeInLeft(flat, tile)
-    v-container.pa-3(grid-list-lg, fluid)
-      v-row(dense)
-        v-col(
-          v-for='(item, idx) of blocks'
-          :key='`block-` + item.key'
-          cols='12'
-          lg='4'
-          xl='3'
-          )
-          v-card.radius-7(light, flat, @click='selectBlock(item)')
-            v-card-text
-              .d-flex.align-center
-                v-avatar.radius-7(color='teal')
-                  v-icon(dark) {{item.icon}}
-                .pl-3
-                  .body-2: strong.teal--text {{item.title}}
-                  .caption.grey--text {{item.description}}
+<template>  
+  <v-card class="editor-modal-blocks animated fadeInLeft" flat tile>
+    <v-container class="pa-3" grid-list-lg fluid>
+      <v-row dense>
+        <v-col v-for="(item, idx) of blocks" :key="`block-` + item.key" cols="12" lg="4" xl="3">
+          <v-card class="radius-7" light flat @click="selectBlock(item)">
+            <v-card-text>
+              <div class="d-flex align-center">
+                <v-avatar class="radius-7" color="teal">
+                  <v-icon dark>{{item.icon}}</v-icon>
+                </v-avatar>
+                <div class="pl-3">
+                  <div class="body-2"><strong class="teal--text">{{item.title}}</strong></div>
+                  <div class="caption grey--text">{{item.description}}</div>
+                </div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+  </v-card>
 </template>
 
 <script>

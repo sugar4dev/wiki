@@ -1,34 +1,35 @@
-<template lang='pug'>
-  v-app(:dark='$vuetify.theme.dark').profile
-    nav-header
-    v-navigation-drawer.pb-0(v-model='profileDrawerShown', app, fixed, clipped, left, permanent)
-      v-list(dense, nav)
-        v-list-item(to='/profile', color='primary')
-          v-list-item-action: v-icon mdi-face-profile
-          v-list-item-content
-            v-list-item-title {{$t('profile:title')}}
-        //- v-list-item(to='/preferences', disabled)
-        //-   v-list-item-action: v-icon(color='grey lighten-1') mdi-cog-outline
-        //-   v-list-item-content
-        //-     v-list-item-title Preferences
-        //-     v-list-item-subtitle.caption.grey--text.text--lighten-1 Coming soon
-        v-list-item(to='/pages', color='primary')
-          v-list-item-action: v-icon mdi-file-document-outline
-          v-list-item-content
-            v-list-item-title {{$t('profile:pages.title')}}
-        //- v-list-item(to='/comments', disabled)
-        //-   v-list-item-action: v-icon(color='grey lighten-1') mdi-message-reply-text
-        //-   v-list-item-content
-        //-     v-list-item-title {{$t('profile:comments.title')}}
-        //-     v-list-item-subtitle.caption.grey--text.text--lighten-1 Coming soon
-
-    v-content(:class='$vuetify.theme.dark ? "grey darken-4" : "grey lighten-5"')
-      transition(name='profile-router')
-        router-view
-
-    nav-footer
-    notify
-    search-results
+<template>  
+  <v-app class="profile" :dark="$vuetify.theme.dark">
+    <nav-header></nav-header>
+    <v-navigation-drawer class="pb-0" v-model="profileDrawerShown" app fixed clipped left permanent>
+      <v-list dense nav>
+        <v-list-item to="/profile" color="primary">
+          <v-list-item-action>
+            <v-icon>mdi-face-profile</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>{{$t('profile:title')}}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item to="/pages" color="primary">
+          <v-list-item-action>
+            <v-icon>mdi-file-document-outline</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>{{$t('profile:pages.title')}}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+    <v-content :class="$vuetify.theme.dark ? 'grey darken-4' : 'grey lighten-5'">
+      <transition name="profile-router">
+        <router-view></router-view>
+      </transition>
+    </v-content>
+    <nav-footer></nav-footer>
+    <notify></notify>
+    <search-results></search-results>
+  </v-app>
 </template>
 
 <script>

@@ -1,8 +1,10 @@
-<template lang='pug'>
-  .v-card-info(:class='`is-` + color')
-    v-card-text.d-flex.align-center(:class='colors.cls')
-      v-icon(:color='colors.icon', left) {{icon}}
-      slot
+<template>  
+  <div class="v-card-info" :class="`is-` + color">
+    <v-card-text class="d-flex align-center" :class="colors.cls">
+      <v-icon :color="colors.icon" left>{{icon}}</v-icon>
+      <slot></slot>
+    </v-card-text>
+  </div>
 </template>
 
 <script>

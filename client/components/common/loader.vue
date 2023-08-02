@@ -1,16 +1,13 @@
-<template lang='pug'>
-  v-dialog(v-model='value', persistent, max-width='350', :overlay-color='color', overlay-opacity='.7')
-    v-card.loader-dialog.radius-7(:color='color', dark)
-      v-card-text.text-center.py-4
-        atom-spinner.is-inline(
-          v-if='mode === `loading`'
-          :animation-duration='1000'
-          :size='60'
-          color='#FFF'
-          )
-        img(v-else-if='mode === `icon`', :src='`/_assets/svg/icon-` + icon + `.svg`', :alt='icon')
-        .subtitle-1.white--text {{ title }}
-        .caption {{ subtitle }}
+<template>  
+  <v-dialog v-model="value" persistent max-width="350" :overlay-color="color" overlay-opacity=".7">
+    <v-card class="loader-dialog radius-7" :color="color" dark>
+      <v-card-text class="text-center py-4">
+        <atom-spinner class="is-inline" v-if="mode === `loading`" :animation-duration="1000" :size="60" color="#FFF"></atom-spinner><img v-else-if="mode === `icon`" :src="`/_assets/svg/icon-` + icon + `.svg`" :alt="icon">
+        <div class="subtitle-1 white--text">{{ title }}</div>
+        <div class="caption">{{ subtitle }}</div>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>

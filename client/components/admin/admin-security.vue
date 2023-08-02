@@ -1,242 +1,88 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row wrap)
-      v-flex(xs12)
-        .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-private.svg', alt='Security', style='width: 80px;')
-          .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:security.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:security.subtitle') }}
-          v-spacer
-          v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
-            v-icon(left) mdi-check
-            span {{$t('common:actions.apply')}}
-        v-form.pt-3
-          v-layout(row wrap)
-            v-flex(lg6 xs12)
-              v-card.animated.fadeInUp
-                v-toolbar(color='red darken-2', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 Security
-                v-card-info(color='red')
-                  span Make sure to understand the implications before turning on / off a security feature.
-                v-card-text
-                  v-switch(
-                    inset
-                    label='Block Open Redirect'
-                    color='red darken-2'
-                    v-model='config.securityOpenRedirect'
-                    persistent-hint
-                    hint='Prevents user controlled URLs from directing to websites outside of your wiki. This provides Open Redirect protection.'
-                    )
-
-                  v-divider.mt-3
-                  v-switch.mt-3(
-                    inset
-                    label='Block IFrame Embedding'
-                    color='red darken-2'
-                    v-model='config.securityIframe'
-                    persistent-hint
-                    hint='Prevents other websites from embedding your wiki in an iframe. This provides clickjacking protection.'
-                    )
-
-                  v-divider.mt-3
-                  v-switch(
-                    inset
-                    label='Same Origin Referrer Policy'
-                    color='red darken-2'
-                    v-model='config.securityReferrerPolicy'
-                    persistent-hint
-                    hint='Limits the referrer header to same origin.'
-                    )
-
-                  v-divider.mt-3
-                  v-switch(
-                    inset
-                    label='Trust X-Forwarded-* Proxy Headers'
-                    color='red darken-2'
-                    v-model='config.securityTrustProxy'
-                    persistent-hint
-                    hint='Should be enabled when using a reverse-proxy like nginx, apache, CloudFlare, etc in front of Wiki.js. Turn off otherwise.'
-                    )
-
-                  //- v-divider.mt-3
-                  //- v-switch(
-                  //-   inset
-                  //-   label='Subresource Integrity (SRI)'
-                  //-   color='red darken-2'
-                  //-   v-model='config.securitySRI'
-                  //-   persistent-hint
-                  //-   hint='This ensure that resources such as CSS and JS files are not altered during delivery.'
-                  //-   disabled
-                  //-   )
-
-                  v-divider.mt-3
-                  v-switch(
-                    inset
-                    label='Enforce HSTS'
-                    color='red darken-2'
-                    v-model='config.securityHSTS'
-                    persistent-hint
-                    hint='This ensures the connection cannot be established through an insecure HTTP connection.'
-                    )
-                  v-select.mt-5(
-                    outlined
-                    label='HSTS Max Age'
-                    :items='hstsDurations'
-                    v-model='config.securityHSTSDuration'
-                    prepend-icon='mdi-subdirectory-arrow-right'
-                    :disabled='!config.securityHSTS'
-                    hide-details
-                    style='max-width: 450px;'
-                    )
-                  .pl-11.mt-3
-                    .caption Defines the duration for which the server should only deliver content through HTTPS.
-                    .caption It's a good idea to start with small values and make sure that nothing breaks on your wiki before moving to longer values.
-
-                  //- v-divider.mt-3
-                  //- v-switch(
-                  //-   inset
-                  //-   label='Enforce CSP'
-                  //-   color='red darken-2'
-                  //-   v-model='config.securityCSP'
-                  //-   persistent-hint
-                  //-   hint='Restricts scripts to pre-approved content sources.'
-                  //-   disabled
-                  //-   )
-                  //- v-textarea.mt-5(
-                  //-   label='CSP Directives'
-                  //-   outlined
-                  //-   v-model='config.securityCSPDirectives'
-                  //-   prepend-icon='mdi-subdirectory-arrow-right'
-                  //-   persistent-hint
-                  //-   hint='One directive per line.'
-                  //-   disabled
-                  //- )
-
-            v-flex(lg6 xs12)
-              v-card.animated.fadeInUp.wait-p2s
-                v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 {{ $t('admin:security.uploads') }}
-                v-card-info(color='blue')
-                  span {{$t('admin:security.uploadsInfo')}}
-                v-card-text
-                  v-text-field.mt-3(
-                    outlined
-                    :label='$t(`admin:security.maxUploadSize`)'
-                    required
-                    v-model='config.uploadMaxFileSize'
-                    prepend-icon='mdi-progress-upload'
-                    :hint='$t(`admin:security.maxUploadSizeHint`)'
-                    persistent-hint
-                    :suffix='$t(`admin:security.maxUploadSizeSuffix`)'
-                    style='max-width: 450px;'
-                    )
-                  v-text-field.mt-3(
-                    outlined
-                    :label='$t(`admin:security.maxUploadBatch`)'
-                    required
-                    v-model='config.uploadMaxFiles'
-                    prepend-icon='mdi-upload-lock'
-                    :hint='$t(`admin:security.maxUploadBatchHint`)'
-                    persistent-hint
-                    :suffix='$t(`admin:security.maxUploadBatchSuffix`)'
-                    style='max-width: 450px;'
-                    )
-                  v-divider.mt-3
-                  v-switch(
-                    inset
-                    label='Scan and Sanitize SVG Uploads'
-                    color='primary'
-                    v-model='config.uploadScanSVG'
-                    persistent-hint
-                    hint='Should SVG uploads be scanned for vulnerabilities and stripped of any potentially unsafe content.'
-                    )
-                  v-divider.mt-3
-                  v-switch(
-                    inset
-                    label='Force Download of Unsafe Extensions'
-                    color='primary'
-                    v-model='config.uploadForceDownload'
-                    persistent-hint
-                    hint='Should non-image files be forced as downloads when accessed directly. This prevents potential XSS attacks via unsafe file extensions uploads.'
-                    )
-
-              v-card.mt-3.animated.fadeInUp.wait-p2s
-                v-toolbar(flat, color='primary', dark, dense)
-                  .subtitle-1 {{$t('admin:security.login')}}
-                //- v-card-info(color='blue')
-                //-   span {{$t('admin:security.loginInfo')}}
-                .overline.grey--text.pa-4 {{$t('admin:security.loginScreen')}}
-                .px-4.pb-3
-                  v-text-field(
-                    outlined
-                    :label='$t(`admin:security.loginBgUrl`)'
-                    v-model='config.authLoginBgUrl'
-                    :hint='$t(`admin:security.loginBgUrlHint`)'
-                    persistent-hint
-                    prepend-icon='mdi-image-area'
-                    append-icon='mdi-folder-image'
-                    @click:append='browseLoginBg'
-                  )
-                  v-switch(
-                    inset
-                    :label='$t(`admin:security.bypassLogin`)'
-                    color='primary'
-                    v-model='config.authAutoLogin'
-                    prepend-icon='mdi-fast-forward'
-                    persistent-hint
-                    :hint='$t(`admin:security.bypassLoginHint`)'
-                    )
-                  v-switch(
-                    inset
-                    :label='$t(`admin:security.hideLocalLogin`)'
-                    color='primary'
-                    v-model='config.authHideLocal'
-                    prepend-icon='mdi-eye-off-outline'
-                    persistent-hint
-                    :hint='$t(`admin:security.hideLocalLoginHint`)'
-                    )
-                v-divider.mt-3
-                .overline.grey--text.pa-4 {{$t('admin:security.loginSecurity')}}
-                .px-4.pb-3
-                  v-switch.mt-0(
-                    inset
-                    :label='$t(`admin:security.enforce2fa`)'
-                    color='primary'
-                    v-model='config.authEnforce2FA'
-                    prepend-icon='mdi-two-factor-authentication'
-                    :hint='$t(`admin:security.enforce2faHint`)'
-                    persistent-hint
-                  )
-                v-divider.mt-3
-                .overline.grey--text.pa-4 {{$t('admin:security.jwt')}}
-                .px-4.pb-3
-                  v-text-field(
-                    v-model='config.authJwtAudience'
-                    outlined
-                    prepend-icon='mdi-account-group-outline'
-                    :label='$t(`admin:auth.jwtAudience`)'
-                    :hint='$t(`admin:auth.jwtAudienceHint`)'
-                    persistent-hint
-                  )
-                  v-text-field.mt-3(
-                    v-model='config.authJwtExpiration'
-                    outlined
-                    prepend-icon='mdi-clock-outline'
-                    :label='$t(`admin:auth.tokenExpiration`)'
-                    :hint='$t(`admin:auth.tokenExpirationHint`)'
-                    persistent-hint
-                  )
-                  v-text-field.mt-3(
-                    v-model='config.authJwtRenewablePeriod'
-                    outlined
-                    prepend-icon='mdi-update'
-                    :label='$t(`admin:auth.tokenRenewalPeriod`)'
-                    :hint='$t(`admin:auth.tokenRenewalPeriodHint`)'
-                    persistent-hint
-                  )
-
-    component(:is='activeModal')
+<template>  
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img class="animated fadeInUp" src="/_assets/svg/icon-private.svg" alt="Security" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{ $t('admin:security.title') }}</div>
+            <div class="subtitle-1 grey--text animated fadeInLeft">{{ $t('admin:security.subtitle') }}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn class="animated fadeInDown" color="success" depressed @click="save" large>
+            <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.apply')}}</span>
+          </v-btn>
+        </div>
+        <v-form class="pt-3">
+          <v-layout row wrap>
+            <v-flex lg6 xs12>
+              <v-card class="animated fadeInUp">
+                <v-toolbar color="red darken-2" dark dense flat>
+                  <v-toolbar-title class="subtitle-1">Security</v-toolbar-title>
+                </v-toolbar>
+                <v-card-info color="red"><span>Make sure to understand the implications before turning on / off a security feature.</span></v-card-info>
+                <v-card-text>
+                  <v-switch inset label="Block Open Redirect" color="red darken-2" v-model="config.securityOpenRedirect" persistent-hint hint="Prevents user controlled URLs from directing to websites outside of your wiki. This provides Open Redirect protection."></v-switch>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch class="mt-3" inset label="Block IFrame Embedding" color="red darken-2" v-model="config.securityIframe" persistent-hint hint="Prevents other websites from embedding your wiki in an iframe. This provides clickjacking protection."></v-switch>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch inset label="Same Origin Referrer Policy" color="red darken-2" v-model="config.securityReferrerPolicy" persistent-hint hint="Limits the referrer header to same origin."></v-switch>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch inset label="Trust X-Forwarded-* Proxy Headers" color="red darken-2" v-model="config.securityTrustProxy" persistent-hint hint="Should be enabled when using a reverse-proxy like nginx, apache, CloudFlare, etc in front of Wiki.js. Turn off otherwise."></v-switch>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch inset label="Enforce HSTS" color="red darken-2" v-model="config.securityHSTS" persistent-hint hint="This ensures the connection cannot be established through an insecure HTTP connection."></v-switch>
+                  <v-select class="mt-5" outlined label="HSTS Max Age" :items="hstsDurations" v-model="config.securityHSTSDuration" prepend-icon="mdi-subdirectory-arrow-right" :disabled="!config.securityHSTS" hide-details style="max-width: 450px;"></v-select>
+                  <div class="pl-11 mt-3">
+                    <div class="caption">Defines the duration for which the server should only deliver content through HTTPS.</div>
+                    <div class="caption">It's a good idea to start with small values and make sure that nothing breaks on your wiki before moving to longer values.</div>
+                  </div>
+                </v-card-text>
+              </v-card>
+            </v-flex>
+            <v-flex lg6 xs12>
+              <v-card class="animated fadeInUp wait-p2s">
+                <v-toolbar color="primary" dark dense flat>
+                  <v-toolbar-title class="subtitle-1">{{ $t('admin:security.uploads') }}</v-toolbar-title>
+                </v-toolbar>
+                <v-card-info color="blue"><span>{{$t('admin:security.uploadsInfo')}}</span></v-card-info>
+                <v-card-text>
+                  <v-text-field class="mt-3" outlined :label="$t(`admin:security.maxUploadSize`)" required v-model="config.uploadMaxFileSize" prepend-icon="mdi-progress-upload" :hint="$t(`admin:security.maxUploadSizeHint`)" persistent-hint :suffix="$t(`admin:security.maxUploadSizeSuffix`)" style="max-width: 450px;"></v-text-field>
+                  <v-text-field class="mt-3" outlined :label="$t(`admin:security.maxUploadBatch`)" required v-model="config.uploadMaxFiles" prepend-icon="mdi-upload-lock" :hint="$t(`admin:security.maxUploadBatchHint`)" persistent-hint :suffix="$t(`admin:security.maxUploadBatchSuffix`)" style="max-width: 450px;"></v-text-field>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch inset label="Scan and Sanitize SVG Uploads" color="primary" v-model="config.uploadScanSVG" persistent-hint hint="Should SVG uploads be scanned for vulnerabilities and stripped of any potentially unsafe content."></v-switch>
+                  <v-divider class="mt-3"></v-divider>
+                  <v-switch inset label="Force Download of Unsafe Extensions" color="primary" v-model="config.uploadForceDownload" persistent-hint hint="Should non-image files be forced as downloads when accessed directly. This prevents potential XSS attacks via unsafe file extensions uploads."></v-switch>
+                </v-card-text>
+              </v-card>
+              <v-card class="mt-3 animated fadeInUp wait-p2s">
+                <v-toolbar flat color="primary" dark dense>
+                  <div class="subtitle-1">{{$t('admin:security.login')}}</div>
+                </v-toolbar>
+                <div class="overline grey--text pa-4">{{$t('admin:security.loginScreen')}}</div>
+                <div class="px-4 pb-3">
+                  <v-text-field outlined :label="$t(`admin:security.loginBgUrl`)" v-model="config.authLoginBgUrl" :hint="$t(`admin:security.loginBgUrlHint`)" persistent-hint prepend-icon="mdi-image-area" append-icon="mdi-folder-image" @click:append="browseLoginBg"></v-text-field>
+                  <v-switch inset :label="$t(`admin:security.bypassLogin`)" color="primary" v-model="config.authAutoLogin" prepend-icon="mdi-fast-forward" persistent-hint :hint="$t(`admin:security.bypassLoginHint`)"></v-switch>
+                  <v-switch inset :label="$t(`admin:security.hideLocalLogin`)" color="primary" v-model="config.authHideLocal" prepend-icon="mdi-eye-off-outline" persistent-hint :hint="$t(`admin:security.hideLocalLoginHint`)"></v-switch>
+                </div>
+                <v-divider class="mt-3"></v-divider>
+                <div class="overline grey--text pa-4">{{$t('admin:security.loginSecurity')}}</div>
+                <div class="px-4 pb-3">
+                  <v-switch class="mt-0" inset :label="$t(`admin:security.enforce2fa`)" color="primary" v-model="config.authEnforce2FA" prepend-icon="mdi-two-factor-authentication" :hint="$t(`admin:security.enforce2faHint`)" persistent-hint></v-switch>
+                </div>
+                <v-divider class="mt-3"></v-divider>
+                <div class="overline grey--text pa-4">{{$t('admin:security.jwt')}}</div>
+                <div class="px-4 pb-3">
+                  <v-text-field v-model="config.authJwtAudience" outlined prepend-icon="mdi-account-group-outline" :label="$t(`admin:auth.jwtAudience`)" :hint="$t(`admin:auth.jwtAudienceHint`)" persistent-hint></v-text-field>
+                  <v-text-field class="mt-3" v-model="config.authJwtExpiration" outlined prepend-icon="mdi-clock-outline" :label="$t(`admin:auth.tokenExpiration`)" :hint="$t(`admin:auth.tokenExpirationHint`)" persistent-hint></v-text-field>
+                  <v-text-field class="mt-3" v-model="config.authJwtRenewablePeriod" outlined prepend-icon="mdi-update" :label="$t(`admin:auth.tokenRenewalPeriod`)" :hint="$t(`admin:auth.tokenRenewalPeriodHint`)" persistent-hint></v-text-field>
+                </div>
+              </v-card>
+            </v-flex>
+          </v-layout>
+        </v-form>
+      </v-flex>
+    </v-layout>
+    <component :is="activeModal"></component>
+  </v-container>
 </template>
 
 <script>

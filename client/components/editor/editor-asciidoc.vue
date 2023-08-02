@@ -1,128 +1,178 @@
-<template lang='pug'>
-  .editor-asciidoc
-    v-toolbar.editor-asciidoc-toolbar(dense, color='primary', dark, flat, style='overflow-x: hidden;')
-      template(v-if='isModalShown')
-        v-spacer
-        v-btn.animated.fadeInRight(text, @click='closeAllModal')
-          v-icon(left) mdi-arrow-left-circle
-          span {{$t('editor:backToEditor')}}
-      template(v-else)
-        v-tooltip(bottom, color='primary')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn(icon, tile, v-on='on', @click='toggleMarkup({ start: `**` })').mx-0
-              v-icon mdi-format-bold
-          span {{$t('editor:markup.bold')}}
-        v-tooltip(bottom, color='primary')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn.wait-p1s(icon, tile, v-on='on', @click='toggleMarkup({ start: `__` })').mx-0
-              v-icon mdi-format-italic
-          span {{$t('editor:markup.italic')}}
-        v-menu(offset-y, open-on-hover)
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn.wait-p3s(icon, tile, v-on='on').mx-0
-              v-icon mdi-format-header-pound
-          v-list.py-0
-            template(v-for='(n, idx) in 6')
-              v-list-item(@click='setHeaderLine(n)', :key='idx')
-                v-list-item-action
-                  v-icon(:size='24 - (idx - 1) * 2') mdi-format-header-{{n}}
-                v-list-item-title {{$t('editor:markup.heading', { level: n })}}
-              v-divider(v-if='idx < 5')
-        v-tooltip(bottom, color='primary')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn.wait-p4s(icon, tile, v-on='on', @click='toggleMarkup({ start: `~` })').mx-0
-              v-icon mdi-format-subscript
-          span {{$t('editor:markup.subscript')}}
-        v-tooltip(bottom, color='primary')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn.wait-p5s(icon, tile, v-on='on', @click='toggleMarkup({ start: `^` })').mx-0
-              v-icon mdi-format-superscript
-          span {{$t('editor:markup.superscript')}}
-        v-menu(offset-y, open-on-hover)
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeIn.wait-p6s(icon, tile, v-on='on').mx-0
-              v-icon mdi-alpha-t-box-outline
-          v-list.py-0
-            v-list-item(@click='insertBeforeEachLine({ content: `> `})')
-              v-list-item-action
-                v-icon mdi-alpha-t-box-outline
-              v-list-item-title {{$t('editor:markup.blockquote')}}
-            v-divider
-            v-list-item(@click='insertBeforeEachLine({ content: `NOTE: `})')
-              v-list-item-action
-                v-icon(color='blue') mdi-alpha-n-box-outline
-              v-list-item-title {{'Note blockquote'}}
-            v-divider
-            v-list-item(@click='insertBeforeEachLine({ content: `TIP: `})')
-              v-list-item-action
-                v-icon(color='success') mdi-alpha-t-box-outline
-              v-list-item-title {{'Tip blockquote'}}
-            v-divider
-            v-list-item(@click='insertBeforeEachLine({ content: `WARNING: `})')
-              v-list-item-action
-                v-icon(color='warning') mdi-alpha-w-box-outline
-              v-list-item-title {{$t('editor:markup.blockquoteWarning')}}
-            v-divider
-            v-list-item(@click='insertBeforeEachLine({ content: `CAUTION: `})')
-              v-list-item-action
-                v-icon(color='purple') mdi-alpha-c-box-outline
-              v-list-item-title {{'Caution blockquote'}}
-            v-list-item(@click='insertBeforeEachLine({ content: `IMPORTANT: `})')
-              v-list-item-action
-                v-icon(color='error') mdi-alpha-i-box-outline
-              v-list-item-title {{'Important blockquote'}}
-            v-divider
-        template(v-if='$vuetify.breakpoint.mdAndUp')
-          v-spacer
-          v-tooltip(bottom, color='primary')
-            template(v-slot:activator='{ on }')
-              v-btn.animated.fadeIn.wait-p2s(icon, tile, v-on='on', @click='previewShown = !previewShown').mx-0
-                v-icon mdi-book-open-outline
-            span {{$t('editor:markup.togglePreviewPane')}}
-
-    .editor-asciidoc-main
-      .editor-asciidoc-sidebar
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.animated.fadeInLeft(icon, tile, v-on='on', dark, @click='insertLink').mx-0
-              v-icon mdi-link-plus
-          span {{$t('editor:markup.insertLink')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalMedia`)').mx-0
-              v-icon(:color='activeModal === `editorModalMedia` ? `teal` : ``') mdi-folder-multiple-image
-          span {{$t('editor:markup.insertAssets')}}
-        v-tooltip(right, color='teal')
-          template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalDrawio`)').mx-0
-              v-icon mdi-chart-multiline
-          span {{$t('editor:markup.insertDiagram')}}
-        template(v-if='$vuetify.breakpoint.mdAndUp')
-          v-spacer
-          v-tooltip(right, color='teal')
-            template(v-slot:activator='{ on }')
-              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', dark, @click='toggleFullscreen').mx-0
-                v-icon mdi-arrow-expand-all
-            span {{$t('editor:markup.distractionFreeMode')}}
-      .editor-asciidoc-editor
-        textarea(ref='cm')
-      transition(name='editor-asciidoc-preview')
-        .editor-asciidoc-preview(v-if='previewShown')
-          .editor-asciidoc-preview-content.contents(ref='editorPreviewContainer')
-            div(
-              ref='editorPreview'
-              v-html='previewHTML'
-              )
-
-    v-system-bar.editor-asciidoc-sysbar(dark, status, color='grey darken-3')
-      .caption.editor-asciidoc-sysbar-locale {{locale.toUpperCase()}}
-      .caption.px-3 /{{path}}
-      template(v-if='$vuetify.breakpoint.mdAndUp')
-        v-spacer
-        .caption AsciiDoc
-        v-spacer
-        .caption Ln {{cursorPos.line + 1}}, Col {{cursorPos.ch + 1}}
-    page-selector(mode='select', v-model='insertLinkDialog', :open-handler='insertLinkHandler', :path='path', :locale='locale')
+<template>  
+  <div class="editor-asciidoc">
+    <v-toolbar class="editor-asciidoc-toolbar" dense color="primary" dark flat style="overflow-x: hidden;">
+      <template v-if="isModalShown">
+        <v-spacer></v-spacer>
+        <v-btn class="animated fadeInRight" text @click="closeAllModal">
+          <v-icon left>mdi-arrow-left-circle</v-icon><span>{{$t('editor:backToEditor')}}</span>
+        </v-btn>
+      </template>
+      <template v-else>
+        <v-tooltip bottom color="primary">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn mx-0" icon tile v-on="on" @click="toggleMarkup({ start: `**` })">
+              <v-icon>mdi-format-bold</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.bold')}}</span>
+        </v-tooltip>
+        <v-tooltip bottom color="primary">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn wait-p1s mx-0" icon tile v-on="on" @click="toggleMarkup({ start: `__` })">
+              <v-icon>mdi-format-italic</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.italic')}}</span>
+        </v-tooltip>
+        <v-menu offset-y open-on-hover>
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn wait-p3s mx-0" icon tile v-on="on">
+              <v-icon>mdi-format-header-pound</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0">
+            <template v-for="(n, idx) in 6">
+              <v-list-item @click="setHeaderLine(n)" :key="idx">
+                <v-list-item-action>
+                  <v-icon :size="24 - (idx - 1) * 2">mdi-format-header-{{n}}</v-icon>
+                </v-list-item-action>
+                <v-list-item-title>{{$t('editor:markup.heading', { level: n })}}</v-list-item-title>
+              </v-list-item>
+              <v-divider v-if="idx < 5"></v-divider>
+            </template>
+          </v-list>
+        </v-menu>
+        <v-tooltip bottom color="primary">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn wait-p4s mx-0" icon tile v-on="on" @click="toggleMarkup({ start: `~` })">
+              <v-icon>mdi-format-subscript</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.subscript')}}</span>
+        </v-tooltip>
+        <v-tooltip bottom color="primary">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn wait-p5s mx-0" icon tile v-on="on" @click="toggleMarkup({ start: `^` })">
+              <v-icon>mdi-format-superscript</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.superscript')}}</span>
+        </v-tooltip>
+        <v-menu offset-y open-on-hover>
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeIn wait-p6s mx-0" icon tile v-on="on">
+              <v-icon>mdi-alpha-t-box-outline</v-icon>
+            </v-btn>
+          </template>
+          <v-list class="py-0">
+            <v-list-item @click="insertBeforeEachLine({ content: `> `})">
+              <v-list-item-action>
+                <v-icon>mdi-alpha-t-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{$t('editor:markup.blockquote')}}</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="insertBeforeEachLine({ content: `NOTE: `})">
+              <v-list-item-action>
+                <v-icon color="blue">mdi-alpha-n-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{'Note blockquote'}}</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="insertBeforeEachLine({ content: `TIP: `})">
+              <v-list-item-action>
+                <v-icon color="success">mdi-alpha-t-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{'Tip blockquote'}}</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="insertBeforeEachLine({ content: `WARNING: `})">
+              <v-list-item-action>
+                <v-icon color="warning">mdi-alpha-w-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{$t('editor:markup.blockquoteWarning')}}</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+            <v-list-item @click="insertBeforeEachLine({ content: `CAUTION: `})">
+              <v-list-item-action>
+                <v-icon color="purple">mdi-alpha-c-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{'Caution blockquote'}}</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="insertBeforeEachLine({ content: `IMPORTANT: `})">
+              <v-list-item-action>
+                <v-icon color="error">mdi-alpha-i-box-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-title>{{'Important blockquote'}}</v-list-item-title>
+            </v-list-item>
+            <v-divider></v-divider>
+          </v-list>
+        </v-menu>
+        <template v-if="$vuetify.breakpoint.mdAndUp">
+          <v-spacer></v-spacer>
+          <v-tooltip bottom color="primary">
+            <template v-slot:activator="{ on }">
+              <v-btn class="animated fadeIn wait-p2s mx-0" icon tile v-on="on" @click="previewShown = !previewShown">
+                <v-icon>mdi-book-open-outline</v-icon>
+              </v-btn>
+            </template><span>{{$t('editor:markup.togglePreviewPane')}}</span>
+          </v-tooltip>
+        </template>
+      </template>
+    </v-toolbar>
+    <div class="editor-asciidoc-main">
+      <div class="editor-asciidoc-sidebar">
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="animated fadeInLeft mx-0" icon tile v-on="on" dark @click="insertLink">
+              <v-icon>mdi-link-plus</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertLink')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p1s mx-0" icon tile v-on="on" dark @click="toggleModal(`editorModalMedia`)">
+              <v-icon :color="activeModal === `editorModalMedia` ? `teal` : ``">mdi-folder-multiple-image</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertAssets')}}</span>
+        </v-tooltip>
+        <v-tooltip right color="teal">
+          <template v-slot:activator="{ on }">
+            <v-btn class="mt-3 animated fadeInLeft wait-p5s mx-0" icon tile v-on="on" dark @click="toggleModal(`editorModalDrawio`)">
+              <v-icon>mdi-chart-multiline</v-icon>
+            </v-btn>
+          </template><span>{{$t('editor:markup.insertDiagram')}}</span>
+        </v-tooltip>
+        <template v-if="$vuetify.breakpoint.mdAndUp">
+          <v-spacer></v-spacer>
+          <v-tooltip right color="teal">
+            <template v-slot:activator="{ on }">
+              <v-btn class="mt-3 animated fadeInLeft wait-p8s mx-0" icon tile v-on="on" dark @click="toggleFullscreen">
+                <v-icon>mdi-arrow-expand-all</v-icon>
+              </v-btn>
+            </template><span>{{$t('editor:markup.distractionFreeMode')}}</span>
+          </v-tooltip>
+        </template>
+      </div>
+      <div class="editor-asciidoc-editor">
+        <textarea ref="cm"></textarea>
+      </div>
+      <transition name="editor-asciidoc-preview">
+        <div class="editor-asciidoc-preview" v-if="previewShown">
+          <div class="editor-asciidoc-preview-content contents" ref="editorPreviewContainer">
+            <div ref="editorPreview" v-html="previewHTML"></div>
+          </div>
+        </div>
+      </transition>
+    </div>
+    <v-system-bar class="editor-asciidoc-sysbar" dark status color="grey darken-3">
+      <div class="caption editor-asciidoc-sysbar-locale">{{locale.toUpperCase()}}</div>
+      <div class="caption px-3">/{{path}}</div>
+      <template v-if="$vuetify.breakpoint.mdAndUp">
+        <v-spacer></v-spacer>
+        <div class="caption">AsciiDoc</div>
+        <v-spacer></v-spacer>
+        <div class="caption">Ln {{cursorPos.line + 1}}, Col {{cursorPos.ch + 1}}</div>
+      </template>
+    </v-system-bar>
+    <page-selector mode="select" v-model="insertLinkDialog" :open-handler="insertLinkHandler" :path="path" :locale="locale"></page-selector>
+  </div>
 </template>
 
 <script>

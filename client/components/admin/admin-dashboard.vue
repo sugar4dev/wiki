@@ -1,108 +1,111 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row, wrap)
-      v-flex(xs12)
-        .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-browse-page.svg', alt='Dashboard', style='width: 80px;')
-          .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:dashboard.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{ $t('admin:dashboard.subtitle') }}
-      v-flex(xs12 md6 lg4 xl3 d-flex)
-        v-card.primary.dashboard-card.animated.fadeInUp(dark)
-          v-card-text
-            v-icon.dashboard-icon mdi-file-document-outline
-            .overline {{$t('admin:dashboard.pages')}}
-            animated-number.display-1(
-              :value='info.pagesTotal'
-              :duration='2000'
-              :formatValue='round'
-              easing='easeOutQuint'
-              )
-      v-flex(xs12 md6 lg4 xl3 d-flex)
-        v-card.blue.darken-3.dashboard-card.animated.fadeInUp.wait-p2s(dark)
-          v-card-text
-            v-icon.dashboard-icon mdi-account
-            .overline {{$t('admin:dashboard.users')}}
-            animated-number.display-1(
-              :value='info.usersTotal'
-              :duration='2000'
-              :formatValue='round'
-              easing='easeOutQuint'
-              )
-      v-flex(xs12 md6 lg4 xl3 d-flex)
-        v-card.blue.darken-4.dashboard-card.animated.fadeInUp.wait-p4s(dark)
-          v-card-text
-            v-icon.dashboard-icon mdi-account-group
-            .overline {{$t('admin:dashboard.groups')}}
-            animated-number.display-1(
-              :value='info.groupsTotal'
-              :duration='2000'
-              :formatValue='round'
-              easing='easeOutQuint'
-              )
-      v-flex(xs12 md6 lg12 xl3 d-flex)
-        v-card.dashboard-card.animated.fadeInUp.wait-p6s(
-          :class='isLatestVersion ? "green" : "red lighten-2"'
-          dark
-          )
-          v-btn.btn-animate-wrench(fab, absolute, :right='!$vuetify.rtl', :left='$vuetify.rtl', top, small, light, to='system', v-if='hasPermission(`manage:system`)')
-            v-icon(:color='isLatestVersion ? `green` : `red darken-4`', small) mdi-wrench
-          v-card-text
-            v-icon.dashboard-icon mdi-blur
-            .subtitle-1 Wiki.js {{info.currentVersion}}
-            .body-2(v-if='isLatestVersion') {{$t('admin:dashboard.versionLatest')}}
-            .body-2(v-else) {{$t('admin:dashboard.versionNew', { version: info.latestVersion })}}
-      v-flex(xs12, xl6)
-        v-card.radius-7.animated.fadeInUp.wait-p2s
-          v-toolbar(:color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`', dense, flat)
-            v-spacer
-            .overline {{$t('admin:dashboard.recentPages')}}
-            v-spacer
-          v-data-table.pb-2(
-            :items='recentPages'
-            :headers='recentPagesHeaders'
-            :loading='recentPagesLoading'
-            hide-default-footer
-            hide-default-header
-            )
-            template(slot='item', slot-scope='props')
-              tr.is-clickable(:active='props.selected', @click='$router.push(`/pages/` + props.item.id)')
-                td
-                  .body-2: strong {{ props.item.title }}
-                td.admin-pages-path
-                  v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ props.item.locale }}
-                  span.ml-2.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`') / {{ props.item.path }}
-                td.text-right.caption(width='250') {{ props.item.updatedAt | moment('calendar') }}
-      v-flex(xs12, xl6)
-        v-card.radius-7.animated.fadeInUp.wait-p4s
-          v-toolbar(:color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`', dense, flat)
-            v-spacer
-            .overline {{$t('admin:dashboard.lastLogins')}}
-            v-spacer
-          v-data-table.pb-2(
-            :items='lastLogins'
-            :headers='lastLoginsHeaders'
-            :loading='lastLoginsLoading'
-            hide-default-footer
-            hide-default-header
-            )
-            template(slot='item', slot-scope='props')
-              tr.is-clickable(:active='props.selected', @click='$router.push(`/users/` + props.item.id)')
-                td
-                  .body-2: strong {{ props.item.name }}
-                td.text-right.caption(width='250') {{ props.item.lastLoginAt | moment('calendar') }}
-
-      v-flex(xs12)
-        v-card.dashboard-contribute.animated.fadeInUp.wait-p4s
-          v-card-text
-            img(src='/_assets/svg/icon-heart-health.svg', alt='Contribute', style='height: 80px;')
-            .pl-5
-              .subtitle-1 {{$t('admin:contribute.title')}}
-              .body-2.mt-3: strong {{$t('admin:dashboard.contributeSubtitle')}}
-              .body-2 {{$t('admin:dashboard.contributeHelp')}}
-              v-btn.mx-0.mt-4(:color='$vuetify.theme.dark ? `indigo lighten-3` : `indigo`', outlined, small, to='/contribute')
-                .caption: strong {{$t('admin:dashboard.contributeLearnMore')}}
-
+<template>  
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img class="animated fadeInUp" src="/_assets/svg/icon-browse-page.svg" alt="Dashboard" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{ $t('admin:dashboard.title') }}</div>
+            <div class="subtitle-1 grey--text animated fadeInLeft wait-p2s">{{ $t('admin:dashboard.subtitle') }}</div>
+          </div>
+        </div>
+      </v-flex>
+      <v-flex xs12 md6 lg4 xl3 d-flex>
+        <v-card class="primary dashboard-card animated fadeInUp" dark>
+          <v-card-text>
+            <v-icon class="dashboard-icon">mdi-file-document-outline</v-icon>
+            <div class="overline">{{$t('admin:dashboard.pages')}}</div>
+            <animated-number class="display-1" :value="info.pagesTotal" :duration="2000" :formatValue="round" easing="easeOutQuint"></animated-number>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 md6 lg4 xl3 d-flex>
+        <v-card class="blue darken-3 dashboard-card animated fadeInUp wait-p2s" dark>
+          <v-card-text>
+            <v-icon class="dashboard-icon">mdi-account</v-icon>
+            <div class="overline">{{$t('admin:dashboard.users')}}</div>
+            <animated-number class="display-1" :value="info.usersTotal" :duration="2000" :formatValue="round" easing="easeOutQuint"></animated-number>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 md6 lg4 xl3 d-flex>
+        <v-card class="blue darken-4 dashboard-card animated fadeInUp wait-p4s" dark>
+          <v-card-text>
+            <v-icon class="dashboard-icon">mdi-account-group</v-icon>
+            <div class="overline">{{$t('admin:dashboard.groups')}}</div>
+            <animated-number class="display-1" :value="info.groupsTotal" :duration="2000" :formatValue="round" easing="easeOutQuint"></animated-number>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 md6 lg12 xl3 d-flex>
+        <v-card class="dashboard-card animated fadeInUp wait-p6s" :class="isLatestVersion ? 'green' : 'red lighten-2'" dark>
+          <v-btn class="btn-animate-wrench" fab absolute :right="!$vuetify.rtl" :left="$vuetify.rtl" top small light to="system" v-if="hasPermission(`manage:system`)">
+            <v-icon :color="isLatestVersion ? `green` : `red darken-4`" small>mdi-wrench</v-icon>
+          </v-btn>
+          <v-card-text>
+            <v-icon class="dashboard-icon">mdi-blur</v-icon>
+            <div class="subtitle-1">Wiki.js {{info.currentVersion}}</div>
+            <div class="body-2" v-if="isLatestVersion">{{$t('admin:dashboard.versionLatest')}}</div>
+            <div class="body-2" v-else>{{$t('admin:dashboard.versionNew', { version: info.latestVersion })}}</div>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 xl6>
+        <v-card class="radius-7 animated fadeInUp wait-p2s">
+          <v-toolbar :color="$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`" dense flat>
+            <v-spacer></v-spacer>
+            <div class="overline">{{$t('admin:dashboard.recentPages')}}</div>
+            <v-spacer></v-spacer>
+          </v-toolbar>
+          <v-data-table class="pb-2" :items="recentPages" :headers="recentPagesHeaders" :loading="recentPagesLoading" hide-default-footer hide-default-header>
+            <template slot="item" slot-scope="props">
+              <tr class="is-clickable" :active="props.selected" @click="$router.push(`/pages/` + props.item.id)">
+                <td>
+                  <div class="body-2"><strong>{{ props.item.title }}</strong></div>
+                </td>
+                <td class="admin-pages-path">
+                  <v-chip label small :color="$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`">{{ props.item.locale }}</v-chip><span class="ml-2 grey--text" :class="$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`">/ {{ props.item.path }}</span>
+                </td>
+                <td class="text-right caption" width="250">{{ props.item.updatedAt | moment('calendar') }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 xl6>
+        <v-card class="radius-7 animated fadeInUp wait-p4s">
+          <v-toolbar :color="$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`" dense flat>
+            <v-spacer></v-spacer>
+            <div class="overline">{{$t('admin:dashboard.lastLogins')}}</div>
+            <v-spacer></v-spacer>
+          </v-toolbar>
+          <v-data-table class="pb-2" :items="lastLogins" :headers="lastLoginsHeaders" :loading="lastLoginsLoading" hide-default-footer hide-default-header>
+            <template slot="item" slot-scope="props">
+              <tr class="is-clickable" :active="props.selected" @click="$router.push(`/users/` + props.item.id)">
+                <td>
+                  <div class="body-2"><strong>{{ props.item.name }}</strong></div>
+                </td>
+                <td class="text-right caption" width="250">{{ props.item.lastLoginAt | moment('calendar') }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-flex>
+      <v-flex xs12>
+        <v-card class="dashboard-contribute animated fadeInUp wait-p4s">
+          <v-card-text><img src="/_assets/svg/icon-heart-health.svg" alt="Contribute" style="height: 80px;">
+            <div class="pl-5">
+              <div class="subtitle-1">{{$t('admin:contribute.title')}}</div>
+              <div class="body-2 mt-3"><strong>{{$t('admin:dashboard.contributeSubtitle')}}</strong></div>
+              <div class="body-2">{{$t('admin:dashboard.contributeHelp')}}</div>
+              <v-btn class="mx-0 mt-4" :color="$vuetify.theme.dark ? `indigo lighten-3` : `indigo`" outlined small to="/contribute">
+                <div class="caption"><strong>{{$t('admin:dashboard.contributeLearnMore')}}</strong></div>
+              </v-btn>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>

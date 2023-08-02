@@ -1,51 +1,51 @@
-<template lang="pug">
-  v-card(flat)
-    v-card-title.pb-4(:class='$vuetify.theme.dark ? `grey darken-3-d3` : `grey lighten-5`')
-      v-text-field(
-        outlined
-        flat
-        prepend-inner-icon='mdi-magnify'
-        v-model='search'
-        label='Search Group Users...'
-        hide-details
-        dense
-        style='max-width: 450px;'
-      )
-      v-spacer
-      v-btn(color='primary', depressed, @click='searchUserDialog = true', :disabled='group.id === 2')
-        v-icon(left) mdi-clipboard-account
-        | Assign User
-    v-data-table(
-      :items='group.users',
-      :headers='headers',
-      :search='search'
-      :page.sync='pagination'
-      :items-per-page='15'
-      @page-count='pageCount = $event'
-      must-sort,
-      hide-default-footer
-    )
-      template(v-slot:item.actions='{ item }')
-        v-menu(bottom, right, min-width='200')
-          template(v-slot:activator='{ on }')
-            v-btn(icon, v-on='on', small)
-              v-icon.grey--text.text--darken-1 mdi-dots-horizontal
-          v-list(dense, nav)
-            v-list-item(:to='`/users/` + item.id')
-              v-list-item-action: v-icon(color='primary') mdi-account-outline
-              v-list-item-content
-                v-list-item-title View User Profile
-            template(v-if='item.id !== 2')
-              v-list-item(@click='unassignUser(item.id)')
-                v-list-item-action: v-icon(color='orange') mdi-account-remove-outline
-                v-list-item-content
-                  v-list-item-title Unassign
-      template(slot='no-data')
-        v-alert.ma-3(icon='mdi-alert', outlined) No users to display.
-    .text-center.py-2(v-if='group.users.length > 15')
-      v-pagination(v-model='pagination', :length='pageCount')
-
-    user-search(v-model='searchUserDialog', @select='assignUser')
+<template>  
+  <v-card flat>
+    <v-card-title class="pb-4" :class="$vuetify.theme.dark ? `grey darken-3-d3` : `grey lighten-5`">
+      <v-text-field outlined flat prepend-inner-icon="mdi-magnify" v-model="search" label="Search Group Users..." hide-details dense style="max-width: 450px;"></v-text-field>
+      <v-spacer></v-spacer>
+      <v-btn color="primary" depressed @click="searchUserDialog = true" :disabled="group.id === 2">
+        <v-icon left>mdi-clipboard-account</v-icon>Assign User
+      </v-btn>
+    </v-card-title>
+    <v-data-table :items="group.users" :headers="headers" :search="search" :page.sync="pagination" :items-per-page="15" @page-count="pageCount = $event" must-sort hide-default-footer>
+      <template v-slot:item.actions="{ item }">
+        <v-menu bottom right min-width="200">
+          <template v-slot:activator="{ on }">
+            <v-btn icon v-on="on" small>
+              <v-icon class="grey--text text--darken-1">mdi-dots-horizontal</v-icon>
+            </v-btn>
+          </template>
+          <v-list dense nav>
+            <v-list-item :to="`/users/` + item.id">
+              <v-list-item-action>
+                <v-icon color="primary">mdi-account-outline</v-icon>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>View User Profile</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <template v-if="item.id !== 2">
+              <v-list-item @click="unassignUser(item.id)">
+                <v-list-item-action>
+                  <v-icon color="orange">mdi-account-remove-outline</v-icon>
+                </v-list-item-action>
+                <v-list-item-content>
+                  <v-list-item-title>Unassign</v-list-item-title>
+                </v-list-item-content>
+              </v-list-item>
+            </template>
+          </v-list>
+        </v-menu>
+      </template>
+      <template slot="no-data">
+        <v-alert class="ma-3" icon="mdi-alert" outlined>No users to display.</v-alert>
+      </template>
+    </v-data-table>
+    <div class="text-center py-2" v-if="group.users.length > 15">
+      <v-pagination v-model="pagination" :length="pageCount"></v-pagination>
+    </div>
+    <user-search v-model="searchUserDialog" @select="assignUser"></user-search>
+  </v-card>
 </template>
 
 <script>

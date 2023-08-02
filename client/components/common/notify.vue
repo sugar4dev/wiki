@@ -1,14 +1,9 @@
-<template lang='pug'>
-  v-snackbar.nav-notify(
-    :color='notification.style'
-    top
-    multi-line
-    v-model='notificationState'
-    :timeout='6000'
-    )
-    .text-left
-      v-icon.mr-3(dark) mdi-{{ notification.icon }}
-      span {{ notification.message }}
+<template>  
+  <v-snackbar class="nav-notify" :color="notification.style" top multi-line v-model="notificationState" :timeout="6000">
+    <div class="text-left">
+      <v-icon class="mr-3" dark>mdi-{{ notification.icon }}</v-icon><span>{{ notification.message }}</span>
+    </div>
+  </v-snackbar>
 </template>
 
 <script>

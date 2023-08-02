@@ -1,33 +1,24 @@
-<template lang="pug">
-  v-card(flat)
-    v-container.px-3.pb-3.pt-3(fluid, grid-list-md)
-      v-layout(row, wrap)
-        v-flex(xs12, v-if='group.isSystem')
-          v-alert.radius-7.mb-0(
-            color='orange darken-2'
-            :class='$vuetify.theme.dark ? "grey darken-4" : "orange lighten-5"'
-            outlined
-            :value='true'
-            icon='mdi-lock-outline'
-            ) This is a system group. Some permissions cannot be modified.
-        v-flex(xs12, md6, lg4, v-for='pmGroup in permissions', :key='pmGroup.category')
-          v-card.md2(flat, :class='$vuetify.theme.dark ? "grey darken-3-d5" : "grey lighten-5"')
-            .overline.px-5.pt-5.pb-3.grey--text.text--darken-2 {{pmGroup.category}}
-            v-card-text.pt-0
-              template(v-for='(pm, idx) in pmGroup.items')
-                v-checkbox.pt-0(
-                  style='justify-content: space-between;'
-                  :key='pm.permission'
-                  :label='pm.permission'
-                  :hint='pm.hint'
-                  persistent-hint
-                  color='primary'
-                  v-model='group.permissions'
-                  :value='pm.permission'
-                  :append-icon='pm.warning ? "mdi-alert" : null',
-                  :disabled='(group.isSystem && pm.restrictedForSystem) || group.id === 1 || pm.disabled'
-                )
-                v-divider.mt-3(v-if='idx < pmGroup.items.length - 1')
+<template>  
+  <v-card flat>
+    <v-container class="px-3 pb-3 pt-3" fluid grid-list-md>
+      <v-layout row wrap>
+        <v-flex xs12 v-if="group.isSystem">
+          <v-alert class="radius-7 mb-0" color="orange darken-2" :class="$vuetify.theme.dark ? 'grey darken-4' : 'orange lighten-5'" outlined :value="true" icon="mdi-lock-outline">This is a system group. Some permissions cannot be modified.</v-alert>
+        </v-flex>
+        <v-flex xs12 md6 lg4 v-for="pmGroup in permissions" :key="pmGroup.category">
+          <v-card class="md2" flat :class="$vuetify.theme.dark ? 'grey darken-3-d5' : 'grey lighten-5'">
+            <div class="overline px-5 pt-5 pb-3 grey--text text--darken-2">{{pmGroup.category}}</div>
+            <v-card-text class="pt-0">
+              <template v-for="(pm, idx) in pmGroup.items">
+                <v-checkbox class="pt-0" style="justify-content: space-between;" :key="pm.permission" :label="pm.permission" :hint="pm.hint" persistent-hint color="primary" v-model="group.permissions" :value="pm.permission" :append-icon="pm.warning ? 'mdi-alert' : null" :disabled="(group.isSystem && pm.restrictedForSystem) || group.id === 1 || pm.disabled"></v-checkbox>
+                <v-divider class="mt-3" v-if="idx < pmGroup.items.length - 1"></v-divider>
+              </template>
+            </v-card-text>
+          </v-card>
+        </v-flex>
+      </v-layout>
+    </v-container>
+  </v-card>
 </template>
 
 <script>

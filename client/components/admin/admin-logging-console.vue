@@ -1,24 +1,21 @@
-<template lang='pug'>
-  v-dialog(v-model='isShown', width='90vw', max-width='1200')
-    .dialog-header
-      span Live Console
-      v-spacer
-      .caption.blue--text.text--lighten-3.mr-3 Streaming...
-      v-progress-circular(
-        indeterminate
-        color='blue lighten-3'
-        :size='20'
-        :width='2'
-        )
-    .consoleTerm(ref='consoleContainer')
-    v-toolbar(flat, color='grey darken-3', dark)
-      v-spacer
-      v-btn(outline, @click='clear')
-        v-icon(left) cancel_presentation
-        span Clear
-      v-btn(outline, @click='close')
-        v-icon(left) close
-        span Close
+<template>  
+  <v-dialog v-model="isShown" width="90vw" max-width="1200">
+    <div class="dialog-header"><span>Live Console</span>
+      <v-spacer></v-spacer>
+      <div class="caption blue--text text--lighten-3 mr-3">Streaming...</div>
+      <v-progress-circular indeterminate color="blue lighten-3" :size="20" :width="2"></v-progress-circular>
+    </div>
+    <div class="consoleTerm" ref="consoleContainer"></div>
+    <v-toolbar flat color="grey darken-3" dark>
+      <v-spacer></v-spacer>
+      <v-btn outline @click="clear">
+        <v-icon left>cancel_presentation</v-icon><span>Clear</span>
+      </v-btn>
+      <v-btn outline @click="close">
+        <v-icon left>close</v-icon><span>Close</span>
+      </v-btn>
+    </v-toolbar>
+  </v-dialog>
 </template>
 
 <script>

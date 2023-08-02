@@ -1,9 +1,12 @@
-<template lang="pug">
-  .tabset.elevation-2
-    ul.tabset-tabs(ref='tabs', role='tablist')
-      slot(name='tabs')
-    .tabset-content(ref='content')
-      slot(name='content')
+<template>  
+  <div class="tabset elevation-2">
+    <ul class="tabset-tabs" ref="tabs" role="tablist">
+      <slot name="tabs"></slot>
+    </ul>
+    <div class="tabset-content" ref="content">
+      <slot name="content"></slot>
+    </div>
+  </div>
 </template>
 
 <script>

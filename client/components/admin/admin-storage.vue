@@ -1,221 +1,192 @@
-<template lang='pug'>
-  v-container(fluid, grid-list-lg)
-    v-layout(row, wrap)
-      v-flex(xs12)
-        .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-cloud-storage.svg', alt='Storage', style='width: 80px;')
-          .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('admin:storage.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{$t('admin:storage.subtitle')}}
-          v-spacer
-          v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/storage', target='_blank')
-            v-icon mdi-help-circle
-          v-btn.mx-3.animated.fadeInDown.wait-p2s(icon, outlined, color='grey', @click='refresh')
-            v-icon mdi-refresh
-          v-btn.animated.fadeInDown(color='success', @click='save', depressed, large)
-            v-icon(left) mdi-check
-            span {{$t('common:actions.apply')}}
-
-      v-flex(lg3, xs12)
-        v-card.animated.fadeInUp
-          v-toolbar(flat, color='primary', dark, dense)
-            .subtitle-1 {{$t('admin:storage.targets')}}
-          v-list(two-line, dense).py-0
-            template(v-for='(tgt, idx) in targets')
-              v-list-item(:key='tgt.key', @click='selectedTarget = tgt.key', :disabled='!tgt.isAvailable')
-                v-list-item-avatar(size='24')
-                  v-icon(color='grey', v-if='!tgt.isAvailable') mdi-minus-box-outline
-                  v-icon(color='primary', v-else-if='tgt.isEnabled', v-ripple, @click='tgt.key !== `local` && (tgt.isEnabled = false)') mdi-checkbox-marked-outline
-                  v-icon(color='grey', v-else, v-ripple, @click='tgt.isEnabled = true') mdi-checkbox-blank-outline
-                v-list-item-content
-                  v-list-item-title.body-2(:class='!tgt.isAvailable ? `grey--text` : (selectedTarget === tgt.key ? `primary--text` : ``)') {{ tgt.title }}
-                  v-list-item-subtitle: .caption(:class='!tgt.isAvailable ? `grey--text text--lighten-1` : (selectedTarget === tgt.key ? `blue--text ` : ``)') {{ tgt.description }}
-                v-list-item-avatar(v-if='selectedTarget === tgt.key', size='24')
-                  v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
-              v-divider(v-if='idx < targets.length - 1')
-
-        v-card.mt-3.animated.fadeInUp.wait-p2s
-          v-toolbar(flat, :color='$vuetify.theme.dark ? `grey darken-3-l5` : `grey darken-3`', dark, dense)
-            .subtitle-1 {{$t('admin:storage.status')}}
-            v-spacer
-            looping-rhombuses-spinner(
-              :animation-duration='5000'
-              :rhombus-size='10'
-              color='#FFF'
-            )
-          v-list.py-0(two-line, dense)
-            template(v-for='(tgt, n) in status')
-              v-list-item(:key='tgt.key')
-                template(v-if='tgt.status === `pending`')
-                  v-list-item-avatar(color='purple')
-                    v-icon(color='white') mdi-clock-outline
-                  v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
-                    v-list-item-subtitle.purple--text.caption {{tgt.status}}
-                  v-list-item-action
-                    v-progress-circular(indeterminate, :size='20', :width='2', color='purple')
-                template(v-else-if='tgt.status === `operational`')
-                  v-list-item-avatar(color='green')
-                    v-icon(color='white') mdi-check-circle
-                  v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
-                    v-list-item-subtitle.green--text.caption {{$t('admin:storage.lastSync', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
-                template(v-else)
-                  v-list-item-avatar(color='red')
-                    v-icon(color='white') mdi-close-circle-outline
-                  v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
-                    v-list-item-subtitle.red--text.caption {{$t('admin:storage.lastSyncAttempt', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
-                  v-list-item-action
-                    v-menu
-                      template(v-slot:activator='{ on }')
-                        v-btn(icon, v-on='on')
-                          v-icon(color='red') mdi-information
-                      v-card(width='450')
-                        v-toolbar(flat, color='red', dark, dense) {{$t('admin:storage.errorMsg')}}
-                        v-card-text {{tgt.message}}
-
-              v-divider(v-if='n < status.length - 1')
-            v-list-item(v-if='status.length < 1')
-              em {{$t('admin:storage.noTarget')}}
-
-      v-flex(xs12, lg9)
-        v-card.wiki-form.animated.fadeInUp.wait-p2s
-          v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{target.title}}
-            v-spacer
-            v-switch(
-              dark
-              color='blue lighten-5'
-              label='Active'
-              v-model='target.isEnabled'
-              hide-details
-              inset
-              )
-          v-card-info(color='blue')
-            div
-              div {{target.description}}
-              span.caption: a(:href='target.website') {{target.website}}
-            v-spacer
-            .admin-providerlogo
-              img(:src='target.logo', :alt='target.title')
-          v-card-text
-            v-form
-              i18next.body-2(path='admin:storage.targetState', tag='div', v-if='target.isEnabled')
-                v-chip(color='green', small, dark, label, place='state') {{$t('admin:storage.targetStateActive')}}
-              i18next.body-2(path='admin:storage.targetState', tag='div', v-else)
-                v-chip(color='red', small, dark, label, place='state') {{$t('admin:storage.targetStateInactive')}}
-              v-divider.mt-3
-              .overline.my-5 {{$t('admin:storage.targetConfig')}}
-              .body-2.ml-3(v-if='!target.config || target.config.length < 1'): em {{$t('admin:storage.noConfigOption')}}
-              template(v-else, v-for='cfg in target.config')
-                v-select(
-                  v-if='cfg.value.type === "string" && cfg.value.enum'
-                  outlined
-                  :items='cfg.value.enum'
-                  :key='cfg.key'
-                  :label='cfg.value.title'
-                  v-model='cfg.value.value'
-                  prepend-icon='mdi-cog-box'
-                  :hint='cfg.value.hint ? cfg.value.hint : ""'
-                  persistent-hint
-                  :class='cfg.value.hint ? "mb-2" : ""'
-                )
-                v-switch.mb-3(
-                  v-else-if='cfg.value.type === "boolean"'
-                  :key='cfg.key'
-                  :label='cfg.value.title'
-                  v-model='cfg.value.value'
-                  color='primary'
-                  prepend-icon='mdi-cog-box'
-                  :hint='cfg.value.hint ? cfg.value.hint : ""'
-                  persistent-hint
-                  inset
-                  )
-                v-textarea(
-                  v-else-if='cfg.value.type === "string" && cfg.value.multiline'
-                  outlined
-                  :key='cfg.key'
-                  :label='cfg.value.title'
-                  v-model='cfg.value.value'
-                  prepend-icon='mdi-cog-box'
-                  :hint='cfg.value.hint ? cfg.value.hint : ""'
-                  persistent-hint
-                  :class='cfg.value.hint ? "mb-2" : ""'
-                  )
-                v-text-field(
-                  v-else
-                  outlined
-                  :key='cfg.key'
-                  :label='cfg.value.title'
-                  v-model='cfg.value.value'
-                  prepend-icon='mdi-cog-box'
-                  :hint='cfg.value.hint ? cfg.value.hint : ""'
-                  persistent-hint
-                  :class='cfg.value.hint ? "mb-2" : ""'
-                  )
-              v-divider.mt-3
-              .overline.my-5 {{$t('admin:storage.syncDirection')}}
-              .body-2.ml-3 {{$t('admin:storage.syncDirectionSubtitle')}}
-              .pr-3.pt-3
-                v-radio-group.ml-3.py-0(v-model='target.mode')
-                  v-radio(
-                    :label='$t(`admin:storage.syncDirBi`)'
-                    color='primary'
-                    value='sync'
-                    :disabled='target.supportedModes.indexOf(`sync`) < 0'
-                  )
-                  v-radio(
-                    :label='$t(`admin:storage.syncDirPush`)'
-                    color='primary'
-                    value='push'
-                    :disabled='target.supportedModes.indexOf(`push`) < 0'
-                  )
-                  v-radio(
-                    :label='$t(`admin:storage.syncDirPull`)'
-                    color='primary'
-                    value='pull'
-                    :disabled='target.supportedModes.indexOf(`pull`) < 0'
-                  )
-              .body-2.ml-3
-                strong {{$t('admin:storage.syncDirBi')}} #[em.red--text.text--lighten-2(v-if='target.supportedModes.indexOf(`sync`) < 0') {{$t('admin:storage.unsupported')}}]
-                .pb-3 {{$t('admin:storage.syncDirBiHint')}}
-                strong {{$t('admin:storage.syncDirPush')}} #[em.red--text.text--lighten-2(v-if='target.supportedModes.indexOf(`push`) < 0') {{$t('admin:storage.unsupported')}}]
-                .pb-3 {{$t('admin:storage.syncDirPushHint')}}
-                strong {{$t('admin:storage.syncDirPull')}} #[em.red--text.text--lighten-2(v-if='target.supportedModes.indexOf(`pull`) < 0') {{$t('admin:storage.unsupported')}}]
-                .pb-3 {{$t('admin:storage.syncDirPullHint')}}
-
-              template(v-if='target.hasSchedule')
-                v-divider.mt-3
-                .overline.my-5 {{$t('admin:storage.syncSchedule')}}
-                .body-2.ml-3 {{$t('admin:storage.syncScheduleHint')}}
-                .pa-3
-                  duration-picker(v-model='target.syncInterval')
-                  i18next.caption.mt-3(path='admin:storage.syncScheduleCurrent', tag='div')
-                    strong(place='schedule') {{getDefaultSchedule(target.syncInterval)}}
-                  i18next.caption(path='admin:storage.syncScheduleDefault', tag='div')
-                    strong(place='schedule') {{getDefaultSchedule(target.syncIntervalDefault)}}
-
-              template(v-if='target.actions && target.actions.length > 0')
-                v-divider.mt-3
-                .overline.my-5 {{$t('admin:storage.actions')}}
-                v-alert(outlined, :value='!target.isEnabled', color='red', icon='mdi-alert')
-                  .body-2 {{$t('admin:storage.actionsInactiveWarn')}}
-                v-container.pt-0(grid-list-xl, fluid)
-                  v-layout(row, wrap, fill-height)
-                    v-flex(xs12, lg6, xl4, v-for='act of target.actions', :key='act.handler')
-                      v-card.radius-7.grey(flat, :class='$vuetify.theme.dark ? `darken-3-d5` : `lighten-3`', height='100%')
-                        v-card-text
-                          .subtitle-1(v-html='act.label')
-                          .body-2.mt-4(v-html='act.hint')
-                          v-btn.mx-0.mt-5(
-                            @click='executeAction(target.key, act.handler)'
-                            outlined
-                            :color='$vuetify.theme.dark ? `blue` : `primary`'
-                            :disabled='runningAction || !target.isEnabled'
-                            :loading='runningActionHandler === act.handler'
-                            ) {{$t('admin:storage.actionRun')}}
-
+<template>
+  <v-container fluid grid-list-lg>
+    <v-layout row wrap>
+      <v-flex xs12>
+        <div class="admin-header"><img class="animated fadeInUp" src="/_assets/svg/icon-cloud-storage.svg" alt="Storage" style="width: 80px;">
+          <div class="admin-header-title">
+            <div class="headline primary--text animated fadeInLeft">{{$t('admin:storage.title')}}</div>
+            <div class="subtitle-1 grey--text animated fadeInLeft wait-p4s">{{$t('admin:storage.subtitle')}}</div>
+          </div>
+          <v-spacer></v-spacer>
+          <v-btn class="animated fadeInDown wait-p3s" icon outlined color="grey" href="https://docs.requarks.io/storage" target="_blank">
+            <v-icon>mdi-help-circle</v-icon>
+          </v-btn>
+          <v-btn class="mx-3 animated fadeInDown wait-p2s" icon outlined color="grey" @click="refresh">
+            <v-icon>mdi-refresh</v-icon>
+          </v-btn>
+          <v-btn class="animated fadeInDown" color="success" @click="save" depressed large>
+            <v-icon left>mdi-check</v-icon><span>{{$t('common:actions.apply')}}</span>
+          </v-btn>
+        </div>
+      </v-flex>
+      <v-flex lg3 xs12>
+        <v-card class="animated fadeInUp">
+          <v-toolbar flat color="primary" dark dense>
+            <div class="subtitle-1">{{$t('admin:storage.targets')}}</div>
+          </v-toolbar>
+          <v-list class="py-0" two-line dense>
+            <template v-for="(tgt, idx) in targets">
+              <v-list-item :key="tgt.key" @click="selectedTarget = tgt.key" :disabled="!tgt.isAvailable">
+                <v-list-item-avatar size="24">
+                  <v-icon color="grey" v-if="!tgt.isAvailable">mdi-minus-box-outline</v-icon>
+                  <v-icon color="primary" v-else-if="tgt.isEnabled" v-ripple @click="tgt.key !== `local` && (tgt.isEnabled = false)">mdi-checkbox-marked-outline</v-icon>
+                  <v-icon color="grey" v-else v-ripple @click="tgt.isEnabled = true">mdi-checkbox-blank-outline</v-icon>
+                </v-list-item-avatar>
+                <v-list-item-content>
+                  <v-list-item-title class="body-2" :class="!tgt.isAvailable ? `grey--text` : (selectedTarget === tgt.key ? `primary--text` : ``)">{{ tgt.title }}</v-list-item-title>
+                  <v-list-item-subtitle>
+                    <div class="caption" :class="!tgt.isAvailable ? `grey--text text--lighten-1` : (selectedTarget === tgt.key ? `blue--text ` : ``)">{{ tgt.description }}</div>
+                  </v-list-item-subtitle>
+                </v-list-item-content>
+                <v-list-item-avatar v-if="selectedTarget === tgt.key" size="24">
+                  <v-icon class="animated fadeInLeft" color="primary" large>mdi-chevron-right</v-icon>
+                </v-list-item-avatar>
+              </v-list-item>
+              <v-divider v-if="idx < targets.length - 1"></v-divider>
+            </template>
+          </v-list>
+        </v-card>
+        <v-card class="mt-3 animated fadeInUp wait-p2s">
+          <v-toolbar flat :color="$vuetify.theme.dark ? `grey darken-3-l5` : `grey darken-3`" dark dense>
+            <div class="subtitle-1">{{$t('admin:storage.status')}}</div>
+            <v-spacer></v-spacer>
+            <looping-rhombuses-spinner :animation-duration="5000" :rhombus-size="10" color="#FFF"></looping-rhombuses-spinner>
+          </v-toolbar>
+          <v-list class="py-0" two-line dense>
+            <template v-for="(tgt, n) in status">
+              <v-list-item :key="tgt.key">
+                <template v-if="tgt.status === `pending`">
+                  <v-list-item-avatar color="purple">
+                    <v-icon color="white">mdi-clock-outline</v-icon>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title class="body-2">{{tgt.title}}</v-list-item-title>
+                    <v-list-item-subtitle class="purple--text caption">{{tgt.status}}</v-list-item-subtitle>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-progress-circular indeterminate :size="20" :width="2" color="purple"></v-progress-circular>
+                  </v-list-item-action>
+                </template>
+                <template v-else-if="tgt.status === `operational`">
+                  <v-list-item-avatar color="green">
+                    <v-icon color="white">mdi-check-circle</v-icon>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title class="body-2">{{tgt.title}}</v-list-item-title>
+                    <v-list-item-subtitle class="green--text caption">{{$t('admin:storage.lastSync', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}</v-list-item-subtitle>
+                  </v-list-item-content>
+                </template>
+                <template v-else>
+                  <v-list-item-avatar color="red">
+                    <v-icon color="white">mdi-close-circle-outline</v-icon>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title class="body-2">{{tgt.title}}</v-list-item-title>
+                    <v-list-item-subtitle class="red--text caption">{{$t('admin:storage.lastSyncAttempt', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}</v-list-item-subtitle>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-menu>
+                      <template v-slot:activator="{ on }">
+                        <v-btn icon v-on="on">
+                          <v-icon color="red">mdi-information</v-icon>
+                        </v-btn>
+                      </template>
+                      <v-card width="450">
+                        <v-toolbar flat color="red" dark dense>{{$t('admin:storage.errorMsg')}}</v-toolbar>
+                        <v-card-text>{{tgt.message}}</v-card-text>
+                      </v-card>
+                    </v-menu>
+                  </v-list-item-action>
+                </template>
+              </v-list-item>
+              <v-divider v-if="n < status.length - 1"></v-divider>
+            </template>
+            <v-list-item v-if="status.length < 1"><em>{{$t('admin:storage.noTarget')}}</em></v-list-item>
+          </v-list>
+        </v-card>
+      </v-flex>
+      <v-flex xs12 lg9>
+        <v-card class="wiki-form animated fadeInUp wait-p2s">
+          <v-toolbar color="primary" dense flat dark>
+            <div class="subtitle-1">{{target.title}}</div>
+            <v-spacer></v-spacer>
+            <v-switch dark color="blue lighten-5" label="Active" v-model="target.isEnabled" hide-details inset></v-switch>
+          </v-toolbar>
+          <v-card-info color="blue">
+            <div>
+              <div>{{target.description}}</div><span class="caption"><a :href="target.website">{{target.website}}</a></span>
+            </div>
+            <v-spacer></v-spacer>
+            <div class="admin-providerlogo"><img :src="target.logo" :alt="target.title"></div>
+          </v-card-info>
+          <v-card-text>
+            <v-form>
+              <i18next class="body-2" path="admin:storage.targetState" tag="div" v-if="target.isEnabled">
+                <v-chip color="green" small dark label place="state">{{$t('admin:storage.targetStateActive')}}</v-chip>
+              </i18next>
+              <i18next class="body-2" path="admin:storage.targetState" tag="div" v-else>
+                <v-chip color="red" small dark label place="state">{{$t('admin:storage.targetStateInactive')}}</v-chip>
+              </i18next>
+              <v-divider class="mt-3"></v-divider>
+              <div class="overline my-5">{{$t('admin:storage.targetConfig')}}</div>
+              <div class="body-2 ml-3" v-if="!target.config || target.config.length < 1"><em>{{$t('admin:storage.noConfigOption')}}</em></div>
+              <template v-else v-for="cfg in target.config">
+                <v-select v-if="cfg.value.type === 'string' && cfg.value.enum" outlined :items="cfg.value.enum" :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-select>
+                <v-switch class="mb-3" v-else-if="cfg.value.type === 'boolean'" :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" color="primary" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint inset></v-switch>
+                <v-textarea v-else-if="cfg.value.type === 'string' && cfg.value.multiline" outlined :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-textarea>
+                <v-text-field v-else outlined :key="cfg.key" :label="cfg.value.title" v-model="cfg.value.value" prepend-icon="mdi-cog-box" :hint="cfg.value.hint ? cfg.value.hint : ''" persistent-hint :class="cfg.value.hint ? 'mb-2' : ''"></v-text-field>
+              </template>
+              <v-divider class="mt-3"></v-divider>
+              <div class="overline my-5">{{$t('admin:storage.syncDirection')}}</div>
+              <div class="body-2 ml-3">{{$t('admin:storage.syncDirectionSubtitle')}}</div>
+              <div class="pr-3 pt-3">
+                <v-radio-group class="ml-3 py-0" v-model="target.mode">
+                  <v-radio :label="$t(`admin:storage.syncDirBi`)" color="primary" value="sync" :disabled="target.supportedModes.indexOf(`sync`) < 0"></v-radio>
+                  <v-radio :label="$t(`admin:storage.syncDirPush`)" color="primary" value="push" :disabled="target.supportedModes.indexOf(`push`) < 0"></v-radio>
+                  <v-radio :label="$t(`admin:storage.syncDirPull`)" color="primary" value="pull" :disabled="target.supportedModes.indexOf(`pull`) < 0"></v-radio>
+                </v-radio-group>
+              </div>
+              <div class="body-2 ml-3"><strong>{{$t('admin:storage.syncDirBi')}} <em class="red--text text--lighten-2" v-if="target.supportedModes.indexOf(`sync`) < 0">{{$t('admin:storage.unsupported')}}</em></strong>
+                <div class="pb-3">{{$t('admin:storage.syncDirBiHint')}}</div><strong>{{$t('admin:storage.syncDirPush')}} <em class="red--text text--lighten-2" v-if="target.supportedModes.indexOf(`push`) < 0">{{$t('admin:storage.unsupported')}}</em></strong>
+                <div class="pb-3">{{$t('admin:storage.syncDirPushHint')}}</div><strong>{{$t('admin:storage.syncDirPull')}} <em class="red--text text--lighten-2" v-if="target.supportedModes.indexOf(`pull`) < 0">{{$t('admin:storage.unsupported')}}</em></strong>
+                <div class="pb-3">{{$t('admin:storage.syncDirPullHint')}}</div>
+              </div>
+              <template v-if="target.hasSchedule">
+                <v-divider class="mt-3"></v-divider>
+                <div class="overline my-5">{{$t('admin:storage.syncSchedule')}}</div>
+                <div class="body-2 ml-3">{{$t('admin:storage.syncScheduleHint')}}</div>
+                <div class="pa-3">
+                  <duration-picker v-model="target.syncInterval"></duration-picker>
+                  <i18next class="caption mt-3" path="admin:storage.syncScheduleCurrent" tag="div"><strong place="schedule">{{getDefaultSchedule(target.syncInterval)}}</strong></i18next>
+                  <i18next class="caption" path="admin:storage.syncScheduleDefault" tag="div"><strong place="schedule">{{getDefaultSchedule(target.syncIntervalDefault)}}</strong></i18next>
+                </div>
+              </template>
+              <template v-if="target.actions && target.actions.length > 0">
+                <v-divider class="mt-3"></v-divider>
+                <div class="overline my-5">{{$t('admin:storage.actions')}}</div>
+                <v-alert outlined :value="!target.isEnabled" color="red" icon="mdi-alert">
+                  <div class="body-2">{{$t('admin:storage.actionsInactiveWarn')}}</div>
+                </v-alert>
+                <v-container class="pt-0" grid-list-xl fluid>
+                  <v-layout row wrap fill-height>
+                    <v-flex xs12 lg6 xl4 v-for="act of target.actions" :key="act.handler">
+                      <v-card class="radius-7 grey" flat :class="$vuetify.theme.dark ? `darken-3-d5` : `lighten-3`" height="100%">
+                        <v-card-text>
+                          <div class="subtitle-1" v-html="act.label"></div>
+                          <div class="body-2 mt-4" v-html="act.hint"></div>
+                          <v-btn class="mx-0 mt-5" @click="executeAction(target.key, act.handler)" outlined :color="$vuetify.theme.dark ? `blue` : `primary`" :disabled="runningAction || !target.isEnabled" :loading="runningActionHandler === act.handler">{{$t('admin:storage.actionRun')}}</v-btn>
+                        </v-card-text>
+                      </v-card>
+                    </v-flex>
+                  </v-layout>
+                </v-container>
+              </template>
+            </v-form>
+          </v-card-text>
+        </v-card>
+      </v-flex>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>

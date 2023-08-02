@@ -1,247 +1,121 @@
-<template lang='pug'>
-  v-dialog(
-    v-model='isShown'
-    persistent
-    width='1000'
-    :fullscreen='$vuetify.breakpoint.smAndDown'
-    )
-    .dialog-header
-      v-icon(color='white') mdi-tag-text-outline
-      .subtitle-1.white--text.ml-3 {{$t('editor:props.pageProperties')}}
-      v-spacer
-      v-btn.mx-0(
-        outlined
-        dark
-        @click.native='close'
-        )
-        v-icon(left) mdi-check
-        span {{ $t('common:actions.ok') }}
-    v-card(tile)
-      v-tabs(color='white', background-color='blue darken-1', dark, centered, v-model='currentTab')
-        v-tab {{$t('editor:props.info')}}
-        v-tab {{$t('editor:props.scheduling')}}
-        v-tab(:disabled='!hasScriptPermission') {{$t('editor:props.scripts')}}
-        v-tab(disabled) {{$t('editor:props.social')}}
-        v-tab(:disabled='!hasStylePermission') {{$t('editor:props.styles')}}
-        v-tab-item(transition='fade-transition', reverse-transition='fade-transition')
-          v-card-text.pt-5
-            .overline.pb-5 {{$t('editor:props.pageInfo')}}
-            v-text-field(
-              ref='iptTitle'
-              outlined
-              :label='$t(`editor:props.title`)'
-              counter='255'
-              v-model='title'
-              )
-            v-text-field(
-              outlined
-              :label='$t(`editor:props.shortDescription`)'
-              counter='255'
-              v-model='description'
-              persistent-hint
-              :hint='$t(`editor:props.shortDescriptionHint`)'
-              )
-          v-divider
-          v-card-text.grey.pt-5(:class='$vuetify.theme.dark ? `darken-3-d3` : `lighten-5`')
-            .overline.pb-5 {{$t('editor:props.path')}}
-            v-container.pa-0(fluid, grid-list-lg)
-              v-layout(row, wrap)
-                v-flex(xs12, md2)
-                  v-select(
-                    outlined
-                    :label='$t(`editor:props.locale`)'
-                    suffix='/'
-                    :items='namespaces'
-                    v-model='locale'
-                    hide-details
-                  )
-                v-flex(xs12, md10)
-                  v-text-field(
-                    outlined
-                    :label='$t(`editor:props.path`)'
-                    append-icon='mdi-folder-search'
-                    v-model='path'
-                    :hint='$t(`editor:props.pathHint`)'
-                    persistent-hint
-                    @click:append='showPathSelector'
-                    :rules='[rules.required, rules.path]'
-                    )
-          v-divider
-          v-card-text.grey.pt-5(:class='$vuetify.theme.dark ? `darken-3-d5` : `lighten-4`')
-            .overline.pb-5 {{$t('editor:props.categorization')}}
-            v-chip-group.radius-5.mb-5(column, v-if='tags && tags.length > 0')
-              v-chip(
-                v-for='tag of tags'
-                :key='`tag-` + tag'
-                close
-                label
-                color='teal'
-                text-color='teal lighten-5'
-                @click:close='removeTag(tag)'
-                ) {{tag}}
-            v-combobox(
-              :label='$t(`editor:props.tags`)'
-              outlined
-              v-model='newTag'
-              :hint='$t(`editor:props.tagsHint`)'
-              :items='newTagSuggestions'
-              :loading='$apollo.queries.newTagSuggestions.loading'
-              persistent-hint
-              hide-no-data
-              :search-input.sync='newTagSearch'
-              )
-        v-tab-item(transition='fade-transition', reverse-transition='fade-transition')
-          v-card-text
-            .overline {{$t('editor:props.publishState')}}
-            v-switch(
-              :label='$t(`editor:props.publishToggle`)'
-              v-model='isPublished'
-              color='primary'
-              :hint='$t(`editor:props.publishToggleHint`)'
-              persistent-hint
-              inset
-              )
-          v-divider
-          v-card-text.grey.pt-5(:class='$vuetify.theme.dark ? `darken-3-d3` : `lighten-5`')
-            v-container.pa-0(fluid, grid-list-lg)
-              v-row
-                v-col(cols='6')
-                  v-dialog(
-                    ref='menuPublishStart'
-                    :close-on-content-click='false'
-                    v-model='isPublishStartShown'
-                    :return-value.sync='publishStartDate'
-                    width='460px'
-                    :disabled='!isPublished'
-                    )
-                    template(v-slot:activator='{ on }')
-                      v-text-field(
-                        v-on='on'
-                        :label='$t(`editor:props.publishStart`)'
-                        v-model='publishStartDate'
-                        prepend-icon='mdi-calendar-check'
-                        readonly
-                        outlined
-                        clearable
-                        :hint='$t(`editor:props.publishStartHint`)'
-                        persistent-hint
-                        :disabled='!isPublished'
-                        )
-                    v-date-picker(
-                      v-model='publishStartDate'
-                      :min='(new Date()).toISOString().substring(0, 10)'
-                      color='primary'
-                      reactive
-                      scrollable
-                      landscape
-                      )
-                      v-spacer
-                      v-btn(
-                        text
-                        color='primary'
-                        @click='isPublishStartShown = false'
-                        ) {{$t('common:actions.cancel')}}
-                      v-btn(
-                        text
-                        color='primary'
-                        @click='$refs.menuPublishStart.save(publishStartDate)'
-                        ) {{$t('common:actions.ok')}}
-                v-col(cols='6')
-                  v-dialog(
-                    ref='menuPublishEnd'
-                    :close-on-content-click='false'
-                    v-model='isPublishEndShown'
-                    :return-value.sync='publishEndDate'
-                    width='460px'
-                    :disabled='!isPublished'
-                    )
-                    template(v-slot:activator='{ on }')
-                      v-text-field(
-                        v-on='on'
-                        :label='$t(`editor:props.publishEnd`)'
-                        v-model='publishEndDate'
-                        prepend-icon='mdi-calendar-remove'
-                        readonly
-                        outlined
-                        clearable
-                        :hint='$t(`editor:props.publishEndHint`)'
-                        persistent-hint
-                        :disabled='!isPublished'
-                        )
-                    v-date-picker(
-                      v-model='publishEndDate'
-                      :min='(new Date()).toISOString().substring(0, 10)'
-                      color='primary'
-                      reactive
-                      scrollable
-                      landscape
-                      )
-                      v-spacer
-                      v-btn(
-                        text
-                        color='primary'
-                        @click='isPublishEndShown = false'
-                        ) {{$t('common:actions.cancel')}}
-                      v-btn(
-                        text
-                        color='primary'
-                        @click='$refs.menuPublishEnd.save(publishEndDate)'
-                        ) {{$t('common:actions.ok')}}
-
-        v-tab-item(:transition='false', :reverse-transition='false')
-          .editor-props-codeeditor-title
-            .overline {{$t('editor:props.html')}}
-          .editor-props-codeeditor
-            textarea(ref='codejs')
-          .editor-props-codeeditor-hint
-            .caption {{$t('editor:props.htmlHint')}}
-
-        v-tab-item(transition='fade-transition', reverse-transition='fade-transition')
-          v-card-text
-            .overline {{$t('editor:props.socialFeatures')}}
-            v-switch(
-              :label='$t(`editor:props.allowComments`)'
-              v-model='isPublished'
-              color='primary'
-              :hint='$t(`editor:props.allowCommentsHint`)'
-              persistent-hint
-              inset
-              )
-            v-switch(
-              :label='$t(`editor:props.allowRatings`)'
-              v-model='isPublished'
-              color='primary'
-              :hint='$t(`editor:props.allowRatingsHint`)'
-              persistent-hint
-              disabled
-              inset
-              )
-            v-switch(
-              :label='$t(`editor:props.displayAuthor`)'
-              v-model='isPublished'
-              color='primary'
-              :hint='$t(`editor:props.displayAuthorHint`)'
-              persistent-hint
-              inset
-              )
-            v-switch(
-              :label='$t(`editor:props.displaySharingBar`)'
-              v-model='isPublished'
-              color='primary'
-              :hint='$t(`editor:props.displaySharingBarHint`)'
-              persistent-hint
-              inset
-              )
-
-        v-tab-item(:transition='false', :reverse-transition='false')
-          .editor-props-codeeditor-title
-            .overline {{$t('editor:props.css')}}
-          .editor-props-codeeditor
-            textarea(ref='codecss')
-          .editor-props-codeeditor-hint
-            .caption {{$t('editor:props.cssHint')}}
-
-    page-selector(:mode='pageSelectorMode', v-model='pageSelectorShown', :path='path', :locale='locale', :open-handler='setPath')
+<template>  
+  <v-dialog v-model="isShown" persistent width="1000" :fullscreen="$vuetify.breakpoint.smAndDown">
+    <div class="dialog-header">
+      <v-icon color="white">mdi-tag-text-outline</v-icon>
+      <div class="subtitle-1 white--text ml-3">{{$t('editor:props.pageProperties')}}</div>
+      <v-spacer></v-spacer>
+      <v-btn class="mx-0" outlined dark @click.native="close">
+        <v-icon left>mdi-check</v-icon><span>{{ $t('common:actions.ok') }}</span>
+      </v-btn>
+    </div>
+    <v-card tile>
+      <v-tabs color="white" background-color="blue darken-1" dark centered v-model="currentTab">
+        <v-tab>{{$t('editor:props.info')}}</v-tab>
+        <v-tab>{{$t('editor:props.scheduling')}}</v-tab>
+        <v-tab :disabled="!hasScriptPermission">{{$t('editor:props.scripts')}}</v-tab>
+        <v-tab disabled>{{$t('editor:props.social')}}</v-tab>
+        <v-tab :disabled="!hasStylePermission">{{$t('editor:props.styles')}}</v-tab>
+        <v-tab-item transition="fade-transition" reverse-transition="fade-transition">
+          <v-card-text class="pt-5">
+            <div class="overline pb-5">{{$t('editor:props.pageInfo')}}</div>
+            <v-text-field ref="iptTitle" outlined :label="$t(`editor:props.title`)" counter="255" v-model="title"></v-text-field>
+            <v-text-field outlined :label="$t(`editor:props.shortDescription`)" counter="255" v-model="description" persistent-hint :hint="$t(`editor:props.shortDescriptionHint`)"></v-text-field>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-text class="grey pt-5" :class="$vuetify.theme.dark ? `darken-3-d3` : `lighten-5`">
+            <div class="overline pb-5">{{$t('editor:props.path')}}</div>
+            <v-container class="pa-0" fluid grid-list-lg>
+              <v-layout row wrap>
+                <v-flex xs12 md2>
+                  <v-select outlined :label="$t(`editor:props.locale`)" suffix="/" :items="namespaces" v-model="locale" hide-details></v-select>
+                </v-flex>
+                <v-flex xs12 md10>
+                  <v-text-field outlined :label="$t(`editor:props.path`)" append-icon="mdi-folder-search" v-model="path" :hint="$t(`editor:props.pathHint`)" persistent-hint @click:append="showPathSelector" :rules="[rules.required, rules.path]"></v-text-field>
+                </v-flex>
+              </v-layout>
+            </v-container>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-text class="grey pt-5" :class="$vuetify.theme.dark ? `darken-3-d5` : `lighten-4`">
+            <div class="overline pb-5">{{$t('editor:props.categorization')}}</div>
+            <v-chip-group class="radius-5 mb-5" column v-if="tags && tags.length > 0">
+              <v-chip v-for="tag of tags" :key="`tag-` + tag" close label color="teal" text-color="teal lighten-5" @click:close="removeTag(tag)">{{tag}}</v-chip>
+            </v-chip-group>
+            <v-combobox :label="$t(`editor:props.tags`)" outlined v-model="newTag" :hint="$t(`editor:props.tagsHint`)" :items="newTagSuggestions" :loading="$apollo.queries.newTagSuggestions.loading" persistent-hint hide-no-data :search-input.sync="newTagSearch"></v-combobox>
+          </v-card-text>
+        </v-tab-item>
+        <v-tab-item transition="fade-transition" reverse-transition="fade-transition">
+          <v-card-text>
+            <div class="overline">{{$t('editor:props.publishState')}}</div>
+            <v-switch :label="$t(`editor:props.publishToggle`)" v-model="isPublished" color="primary" :hint="$t(`editor:props.publishToggleHint`)" persistent-hint inset></v-switch>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-text class="grey pt-5" :class="$vuetify.theme.dark ? `darken-3-d3` : `lighten-5`">
+            <v-container class="pa-0" fluid grid-list-lg>
+              <v-row>
+                <v-col cols="6">
+                  <v-dialog ref="menuPublishStart" :close-on-content-click="false" v-model="isPublishStartShown" :return-value.sync="publishStartDate" width="460px" :disabled="!isPublished">
+                    <template v-slot:activator="{ on }">
+                      <v-text-field v-on="on" :label="$t(`editor:props.publishStart`)" v-model="publishStartDate" prepend-icon="mdi-calendar-check" readonly outlined clearable :hint="$t(`editor:props.publishStartHint`)" persistent-hint :disabled="!isPublished"></v-text-field>
+                    </template>
+                    <v-date-picker v-model="publishStartDate" :min="(new Date()).toISOString().substring(0, 10)" color="primary" reactive scrollable landscape>
+                      <v-spacer></v-spacer>
+                      <v-btn text color="primary" @click="isPublishStartShown = false">{{$t('common:actions.cancel')}}</v-btn>
+                      <v-btn text color="primary" @click="$refs.menuPublishStart.save(publishStartDate)">{{$t('common:actions.ok')}}</v-btn>
+                    </v-date-picker>
+                  </v-dialog>
+                </v-col>
+                <v-col cols="6">
+                  <v-dialog ref="menuPublishEnd" :close-on-content-click="false" v-model="isPublishEndShown" :return-value.sync="publishEndDate" width="460px" :disabled="!isPublished">
+                    <template v-slot:activator="{ on }">
+                      <v-text-field v-on="on" :label="$t(`editor:props.publishEnd`)" v-model="publishEndDate" prepend-icon="mdi-calendar-remove" readonly outlined clearable :hint="$t(`editor:props.publishEndHint`)" persistent-hint :disabled="!isPublished"></v-text-field>
+                    </template>
+                    <v-date-picker v-model="publishEndDate" :min="(new Date()).toISOString().substring(0, 10)" color="primary" reactive scrollable landscape>
+                      <v-spacer></v-spacer>
+                      <v-btn text color="primary" @click="isPublishEndShown = false">{{$t('common:actions.cancel')}}</v-btn>
+                      <v-btn text color="primary" @click="$refs.menuPublishEnd.save(publishEndDate)">{{$t('common:actions.ok')}}</v-btn>
+                    </v-date-picker>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+        </v-tab-item>
+        <v-tab-item :transition="false" :reverse-transition="false">
+          <div class="editor-props-codeeditor-title">
+            <div class="overline">{{$t('editor:props.html')}}</div>
+          </div>
+          <div class="editor-props-codeeditor">
+            <textarea ref="codejs"></textarea>
+          </div>
+          <div class="editor-props-codeeditor-hint">
+            <div class="caption">{{$t('editor:props.htmlHint')}}</div>
+          </div>
+        </v-tab-item>
+        <v-tab-item transition="fade-transition" reverse-transition="fade-transition">
+          <v-card-text>
+            <div class="overline">{{$t('editor:props.socialFeatures')}}</div>
+            <v-switch :label="$t(`editor:props.allowComments`)" v-model="isPublished" color="primary" :hint="$t(`editor:props.allowCommentsHint`)" persistent-hint inset></v-switch>
+            <v-switch :label="$t(`editor:props.allowRatings`)" v-model="isPublished" color="primary" :hint="$t(`editor:props.allowRatingsHint`)" persistent-hint disabled inset></v-switch>
+            <v-switch :label="$t(`editor:props.displayAuthor`)" v-model="isPublished" color="primary" :hint="$t(`editor:props.displayAuthorHint`)" persistent-hint inset></v-switch>
+            <v-switch :label="$t(`editor:props.displaySharingBar`)" v-model="isPublished" color="primary" :hint="$t(`editor:props.displaySharingBarHint`)" persistent-hint inset></v-switch>
+          </v-card-text>
+        </v-tab-item>
+        <v-tab-item :transition="false" :reverse-transition="false">
+          <div class="editor-props-codeeditor-title">
+            <div class="overline">{{$t('editor:props.css')}}</div>
+          </div>
+          <div class="editor-props-codeeditor">
+            <textarea ref="codecss"></textarea>
+          </div>
+          <div class="editor-props-codeeditor-hint">
+            <div class="caption">{{$t('editor:props.cssHint')}}</div>
+          </div>
+        </v-tab-item>
+      </v-tabs>
+    </v-card>
+    <page-selector :mode="pageSelectorMode" v-model="pageSelectorShown" :path="path" :locale="locale" :open-handler="setPath"></page-selector>
+  </v-dialog>
 </template>
 
 <script>

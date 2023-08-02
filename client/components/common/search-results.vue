@@ -1,57 +1,59 @@
-<template lang="pug">
-  .search-results(v-if='searchIsFocused || (search && search.length > 1)')
-    .search-results-container
-      .search-results-help(v-if='!search || (search && search.length < 2)')
-        img(src='/_assets/svg/icon-search-alt.svg')
-        .mt-4 {{$t('common:header.searchHint')}}
-      .search-results-loader(v-else-if='searchIsLoading && (!results || results.length < 1)')
-        orbit-spinner(
-          :animation-duration='1000'
-          :size='100'
-          color='#FFF'
-        )
-        .headline.mt-5 {{$t('common:header.searchLoading')}}
-      .search-results-none(v-else-if='!searchIsLoading && (!results || results.length < 1)')
-        img(src='/_assets/svg/icon-no-results.svg', alt='No Results')
-        .subheading {{$t('common:header.searchNoResult')}}
-      template(v-if='search && search.length >= 2 && results && results.length > 0')
-        v-subheader.white--text {{$t('common:header.searchResultsCount', { total: response.totalHits })}}
-        v-list.search-results-items.radius-7.py-0(two-line, dense)
-          template(v-for='(item, idx) of results')
-            v-list-item(@click='goToPage(item)', @click.middle="goToPageInNewTab(item)", :key='item.id', :class='idx === cursor ? `highlighted` : ``')
-              v-list-item-avatar(tile)
-                img(src='/_assets/svg/icon-selective-highlighting.svg')
-              v-list-item-content
-                v-list-item-title(v-text='item.title')
-                v-list-item-subtitle.caption(v-text='item.description')
-                .caption.grey--text(v-text='item.path')
-              v-list-item-action
-                v-chip(label, outlined) {{item.locale.toUpperCase()}}
-            v-divider(v-if='idx < results.length - 1')
-        v-pagination.mt-3(
-          v-if='paginationLength > 1'
-          dark
-          v-model='pagination'
-          :length='paginationLength'
-          circle
-        )
-      template(v-if='suggestions && suggestions.length > 0')
-        v-subheader.white--text.mt-3 {{$t('common:header.searchDidYouMean')}}
-        v-list.search-results-suggestions.radius-7(dense, dark)
-          template(v-for='(term, idx) of suggestions')
-            v-list-item(:key='term', @click='setSearchTerm(term)', :class='idx + results.length === cursor ? `highlighted` : ``')
-              v-list-item-avatar
-                v-icon mdi-magnify
-              v-list-item-content
-                v-list-item-title(v-text='term')
-            v-divider(v-if='idx < suggestions.length - 1')
-      .text-xs-center.pt-5(v-if='search && search.length > 1')
-        //- v-btn.mx-2(outlined, color='orange', @click='search = ``', v-if='results.length > 0')
-        //-   v-icon(left) mdi-content-save
-        //-   span {{$t('common:header.searchCopyLink')}}
-        v-btn.mx-2(outlined, color='pink', @click='search = ``')
-          v-icon(left) mdi-close
-          span {{$t('common:header.searchClose')}}
+<template>  
+  <div class="search-results" v-if="searchIsFocused || (search && search.length > 1)">
+    <div class="search-results-container">
+      <div class="search-results-help" v-if="!search || (search && search.length < 2)"><img src="/_assets/svg/icon-search-alt.svg">
+        <div class="mt-4">{{$t('common:header.searchHint')}}</div>
+      </div>
+      <div class="search-results-loader" v-else-if="searchIsLoading && (!results || results.length < 1)">
+        <orbit-spinner :animation-duration="1000" :size="100" color="#FFF"></orbit-spinner>
+        <div class="headline mt-5">{{$t('common:header.searchLoading')}}</div>
+      </div>
+      <div class="search-results-none" v-else-if="!searchIsLoading && (!results || results.length < 1)"><img src="/_assets/svg/icon-no-results.svg" alt="No Results">
+        <div class="subheading">{{$t('common:header.searchNoResult')}}</div>
+      </div>
+      <template v-if="search && search.length >= 2 && results && results.length > 0">
+        <v-subheader class="white--text">{{$t('common:header.searchResultsCount', { total: response.totalHits })}}</v-subheader>
+        <v-list class="search-results-items radius-7 py-0" two-line dense>
+          <template v-for="(item, idx) of results">
+            <v-list-item @click="goToPage(item)" @click.middle="goToPageInNewTab(item)" :key="item.id" :class="idx === cursor ? `highlighted` : ``">
+              <v-list-item-avatar tile><img src="/_assets/svg/icon-selective-highlighting.svg"></v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title v-text="item.title"></v-list-item-title>
+                <v-list-item-subtitle class="caption" v-text="item.description"></v-list-item-subtitle>
+                <div class="caption grey--text" v-text="item.path"></div>
+              </v-list-item-content>
+              <v-list-item-action>
+                <v-chip label outlined>{{item.locale.toUpperCase()}}</v-chip>
+              </v-list-item-action>
+            </v-list-item>
+            <v-divider v-if="idx < results.length - 1"></v-divider>
+          </template>
+        </v-list>
+        <v-pagination class="mt-3" v-if="paginationLength > 1" dark v-model="pagination" :length="paginationLength" circle></v-pagination>
+      </template>
+      <template v-if="suggestions && suggestions.length > 0">
+        <v-subheader class="white--text mt-3">{{$t('common:header.searchDidYouMean')}}</v-subheader>
+        <v-list class="search-results-suggestions radius-7" dense dark>
+          <template v-for="(term, idx) of suggestions">
+            <v-list-item :key="term" @click="setSearchTerm(term)" :class="idx + results.length === cursor ? `highlighted` : ``">
+              <v-list-item-avatar>
+                <v-icon>mdi-magnify</v-icon>
+              </v-list-item-avatar>
+              <v-list-item-content>
+                <v-list-item-title v-text="term"></v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+            <v-divider v-if="idx < suggestions.length - 1"></v-divider>
+          </template>
+        </v-list>
+      </template>
+      <div class="text-xs-center pt-5" v-if="search && search.length > 1">
+        <v-btn class="mx-2" outlined color="pink" @click="search = ``">
+          <v-icon left>mdi-close</v-icon><span>{{$t('common:header.searchClose')}}</span>
+        </v-btn>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>

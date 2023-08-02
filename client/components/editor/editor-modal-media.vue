@@ -1,230 +1,232 @@
-<template lang='pug'>
-  v-card.editor-modal-media.animated.fadeInLeft(flat, tile, :class='`is-editor-` + editorKey')
-    v-container.pa-3(grid-list-lg, fluid)
-      v-layout(row, wrap)
-        v-flex(xs12, lg9)
-          v-card.radius-7.animated.fadeInLeft.wait-p1s(:light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark')
-            v-card-text
-              .d-flex
-                v-toolbar.radius-7(:color='$vuetify.theme.dark ? `teal` : `teal lighten-5`', dense, flat, height='44')
-                  .body-2(:class='$vuetify.theme.dark ? `white--text` : `teal--text`') {{$t('editor:assets.title')}}
-                  v-spacer
-                  v-btn(text, icon, @click='refresh')
-                    v-icon(:color='$vuetify.theme.dark ? `white` : `teal`') mdi-refresh
-                v-dialog(v-model='newFolderDialog', max-width='550')
-                  template(v-slot:activator='{ on }')
-                    v-btn.ml-3.my-0.mr-0.radius-7(outlined, large, color='teal', :icon='$vuetify.breakpoint.xsOnly', v-on='on')
-                      v-icon(:left='$vuetify.breakpoint.mdAndUp') mdi-plus
-                      span.hidden-sm-and-down(:class='$vuetify.theme.dark ? `teal--text text--lighten-3` : ``') {{$t('editor:assets.newFolder')}}
-                  v-card
-                    .dialog-header.is-short.subtitle-1 {{$t('editor:assets.newFolder')}}
-                    v-card-text.pt-5
-                      v-text-field.md2(
-                        outlined
-                        prepend-icon='mdi-folder-outline'
-                        v-model='newFolderName'
-                        :label='$t(`editor:assets.folderName`)'
-                        counter='255'
-                        @keydown.13='createFolder'
-                        @keyup.esc='newFolderDialog = false'
-                        ref='folderNameIpt'
-                        )
-                      i18next.caption.grey--text.text--darken-1.pl-5(path='editor:assets.folderNameNamingRules', tag='div')
-                        a(place='namingRules', href='https://docs-beta.requarks.io/guide/assets#naming-restrictions', target='_blank') {{$t('editor:assets.folderNameNamingRulesLink')}}
-                    v-card-chin
-                      v-spacer
-                      v-btn(text, @click='newFolderDialog = false') {{$t('common:actions.cancel')}}
-                      v-btn.px-3(color='primary', @click='createFolder', :disabled='!isFolderNameValid', :loading='newFolderLoading') {{$t('common:actions.create')}}
-              v-toolbar(flat, dense, :color='$vuetify.theme.dark ? `grey darken-3` : `white`')
-                template(v-if='folderTree.length > 0')
-                  .body-2
-                    span.mr-1 /
-                    template(v-for='folder of folderTree')
-                      span(:key='folder.id') {{folder.name}}
-                      span.mx-1 /
-                .body-2(v-else) / #[em root]
-              template(v-if='folders.length > 0 || currentFolderId > 0')
-                v-btn.is-icon.mx-1(:color='$vuetify.theme.dark ? `grey lighten-1` : `grey darken-2`', outlined, :dark='currentFolderId > 0', @click='upFolder()', :disabled='currentFolderId === 0')
-                  v-icon mdi-folder-upload
-                v-btn.btn-normalcase.mx-1(v-for='folder of folders', :key='folder.id', depressed,  color='grey darken-2', dark, @click='downFolder(folder)')
-                  v-icon(left) mdi-folder
-                  span.caption(style='text-transform: none;') {{ folder.name }}
-                v-divider.mt-2
-              v-data-table(
-                :items='assets'
-                :headers='headers'
-                :page.sync='pagination'
-                :items-per-page='15'
-                :loading='loading'
-                must-sort,
-                sort-by='ID',
-                sort-desc,
-                hide-default-footer,
-                dense
-              )
-                template(slot='item', slot-scope='props')
-                  tr.is-clickable(
-                    @click.left='currentFileId = props.item.id'
-                    @click.right.prevent=''
-                    :class='currentFileId === props.item.id ? ($vuetify.theme.dark ? `grey darken-3-d5` : `teal lighten-5`) : ``'
-                    )
-                    td.caption(v-if='$vuetify.breakpoint.smAndUp') {{ props.item.id }}
-                    td
-                      .body-2: strong(:class='currentFileId === props.item.id ? `teal--text` : ``') {{ props.item.filename }}
-                      .caption.grey--text {{ props.item.description }}
-                    td.text-xs-center(v-if='$vuetify.breakpoint.lgAndUp')
-                      v-chip.ma-0(x-small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`')
-                        .overline {{props.item.ext.toUpperCase().substring(1)}}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes }}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
-                    td(v-if='$vuetify.breakpoint.smAndUp')
-                      v-menu(offset-x, min-width='200')
-                        template(v-slot:activator='{ on }')
-                          v-btn(icon, v-on='on', tile, small, @click.left='currentFileId = props.item.id')
-                            v-icon(color='grey darken-2') mdi-dots-horizontal
-                        v-list(nav, style='border-top: 5px solid #444;')
-                          v-list-item(@click='', disabled)
-                            v-list-item-avatar(size='24')
-                              v-icon(color='teal') mdi-text-short
-                            v-list-item-content {{$t('common:actions.properties')}}
-                          template(v-if='props.item.kind === `IMAGE`')
-                            v-list-item(@click='previewDialog = true', disabled)
-                              v-list-item-avatar(size='24')
-                                v-icon(color='green') mdi-image-search-outline
-                              v-list-item-content {{$t('common:actions.preview')}}
-                            v-list-item(@click='', disabled)
-                              v-list-item-avatar(size='24')
-                                v-icon(color='indigo') mdi-crop-rotate
-                              v-list-item-content {{$t('common:actions.edit')}}
-                            v-list-item(@click='', disabled)
-                              v-list-item-avatar(size='24')
-                                v-icon(color='purple') mdi-flash-circle
-                              v-list-item-content {{$t('common:actions.optimize')}}
-                          v-list-item(@click='openRenameDialog')
-                            v-list-item-avatar(size='24')
-                              v-icon(color='orange') mdi-keyboard-outline
-                            v-list-item-content {{$t('common:actions.rename')}}
-                          v-list-item(@click='', disabled)
-                            v-list-item-avatar(size='24')
-                              v-icon(color='blue') mdi-file-move
-                            v-list-item-content {{$t('common:actions.move')}}
-                          v-list-item(@click='deleteDialog = true')
-                            v-list-item-avatar(size='24')
-                              v-icon(color='red') mdi-file-hidden
-                            v-list-item-content {{$t('common:actions.delete')}}
-                template(slot='no-data')
-                  v-alert.mt-3.radius-7(icon='mdi-folder-open-outline', :value='true', outlined, color='teal') {{$t('editor:assets.folderEmpty')}}
-              .text-xs-center.py-2(v-if='this.pageTotal > 1')
-                v-pagination(v-model='pagination', :length='pageTotal', color='teal')
-              .d-flex.mt-3
-                v-toolbar.radius-7(flat, :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-4`', dense, height='44')
-                  .body-2(:class='$vuetify.theme.dark ? `grey--text text--lighten-1` : `grey--text text--darken-1`') {{$t('editor:assets.fileCount', { count: assets.length })}}
-                v-btn.ml-3.mr-0.my-0.radius-7(color='red darken-2', large, @click='cancel', dark)
-                  v-icon(left) mdi-close
-                  span {{$t('common:actions.cancel')}}
-                v-btn.ml-3.mr-0.my-0.radius-7(color='teal', large, @click='insert', :disabled='!currentFileId', :dark='currentFileId !== null')
-                  v-icon(left) mdi-playlist-plus
-                  span {{$t('common:actions.insert')}}
-
-        v-flex(xs12, lg3)
-          v-card.radius-7.animated.fadeInRight.wait-p3s(:light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark')
-            v-card-text
-              .d-flex
-                v-toolbar.radius-7(:color='$vuetify.theme.dark ? `teal` : `teal lighten-5`', dense, flat, height='44')
-                  v-icon.mr-3(:color='$vuetify.theme.dark ? `white` : `teal`') mdi-cloud-upload
-                  .body-2(:class='$vuetify.theme.dark ? `white--text` : `teal--text`') {{$t('editor:assets.uploadAssets')}}
-                v-btn.my-0.ml-3.mr-0.radius-7(outlined, large, color='teal', @click='browse', v-if='$vuetify.breakpoint.mdAndUp')
-                  v-icon(left) mdi-plus-box-multiple
-                  span(:class='$vuetify.theme.dark ? `teal--text text--lighten-3` : ``') {{$t('common:actions.browse')}}
-              file-pond.mt-3(
-                name='mediaUpload'
-                ref='pond'
-                :label-idle='$t(`editor:assets.uploadAssetsDropZone`)'
-                allow-multiple='true'
-                :files='files'
-                max-files='10'
-                :server='filePondServerOpts'
-                :instant-upload='false'
-                :allow-revert='false'
-                @processfile='onFileProcessed'
-              )
-            v-divider
-            v-card-actions.pa-3
-              .caption.grey--text.text-darken-2 Max 10 files, 5 MB each
-              v-spacer
-              v-btn.px-4(color='teal', dark, @click='upload') {{$t('common:actions.upload')}}
-
-          v-card.mt-3.radius-7.animated.fadeInRight.wait-p4s(:light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark')
-            v-card-text.pb-0
-              v-toolbar.radius-7(:color='$vuetify.theme.dark ? `teal` : `teal lighten-5`', dense, flat)
-                v-icon.mr-3(:color='$vuetify.theme.dark ? `white` : `teal`') mdi-cloud-download
-                .body-2(:class='$vuetify.theme.dark ? `white--text` : `teal--text`') {{$t('editor:assets.fetchImage')}}
-                v-spacer
-                v-chip(label, color='white', small).teal--text coming soon
-              v-text-field.mt-3(
-                v-model='remoteImageUrl'
-                outlined
-                color='teal'
-                single-line
-                placeholder='https://example.com/image.jpg'
-              )
-            v-divider
-            v-card-actions.pa-3
-              .caption.grey--text.text-darken-2 Max 5 MB
-              v-spacer
-              v-btn.px-4(color='teal', disabled) {{$t('common:actions.fetch')}}
-
-          v-card.mt-3.radius-7.animated.fadeInRight.wait-p4s(:light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark')
-            v-card-text.pb-0
-              v-toolbar.radius-7(:color='$vuetify.theme.dark ? `teal` : `teal lighten-5`', dense, flat)
-                v-icon.mr-3(:color='$vuetify.theme.dark ? `white` : `teal`') mdi-format-align-top
-                .body-2(:class='$vuetify.theme.dark ? `white--text` : `teal--text`') {{$t('editor:assets.imageAlign')}}
-              v-select.mt-3(
-                v-model='imageAlignment'
-                :items='imageAlignments'
-                outlined
-                single-line
-                color='teal'
-                placeholder='None'
-              )
-
-    //- RENAME DIALOG
-
-    v-dialog(v-model='renameDialog', max-width='550', persistent)
-      v-card
-        .dialog-header.is-short.is-orange
-          v-icon.mr-2(color='white') mdi-keyboard
-          span {{$t('editor:assets.renameAsset')}}
-        v-card-text.pt-5
-          .body-2 {{$t('editor:assets.renameAssetSubtitle')}}
-          v-text-field(
-            outlined
-            single-line
-            :counter='255'
-            v-model='renameAssetName'
-            @keydown.13='renameAsset'
-            :disabled='renameAssetLoading'
-          )
-        v-card-chin
-          v-spacer
-          v-btn(text, @click='renameDialog = false', :disabled='renameAssetLoading') {{$t('common:actions.cancel')}}
-          v-btn.px-3(color='orange darken-3', @click='renameAsset', :loading='renameAssetLoading').white--text {{$t('common:actions.rename')}}
-
-    //- DELETE DIALOG
-
-    v-dialog(v-model='deleteDialog', max-width='550', persistent)
-      v-card
-        .dialog-header.is-short.is-red
-          v-icon.mr-2(color='white') mdi-trash-can-outline
-          span {{$t('editor:assets.deleteAsset')}}
-        v-card-text.pt-5
-          .body-2 {{$t('editor:assets.deleteAssetConfirm')}}
-          .body-2.red--text.text--darken-2 {{currentAsset.filename}}?
-          .caption.mt-3 {{$t('editor:assets.deleteAssetWarn')}}
-        v-card-chin
-          v-spacer
-          v-btn(text, @click='deleteDialog = false', :disabled='deleteAssetLoading') {{$t('common:actions.cancel')}}
-          v-btn.px-3(color='red darken-2', @click='deleteAsset', :loading='deleteAssetLoading').white--text {{$t('common:actions.delete')}}
+<template>  
+  <v-card class="editor-modal-media animated fadeInLeft" flat tile :class="`is-editor-` + editorKey">
+    <v-container class="pa-3" grid-list-lg fluid>
+      <v-layout row wrap>
+        <v-flex xs12 lg9>
+          <v-card class="radius-7 animated fadeInLeft wait-p1s" :light="!$vuetify.theme.dark" :dark="$vuetify.theme.dark">
+            <v-card-text>
+              <div class="d-flex">
+                <v-toolbar class="radius-7" :color="$vuetify.theme.dark ? `teal` : `teal lighten-5`" dense flat height="44">
+                  <div class="body-2" :class="$vuetify.theme.dark ? `white--text` : `teal--text`">{{$t('editor:assets.title')}}</div>
+                  <v-spacer></v-spacer>
+                  <v-btn text icon @click="refresh">
+                    <v-icon :color="$vuetify.theme.dark ? `white` : `teal`">mdi-refresh</v-icon>
+                  </v-btn>
+                </v-toolbar>
+                <v-dialog v-model="newFolderDialog" max-width="550">
+                  <template v-slot:activator="{ on }">
+                    <v-btn class="ml-3 my-0 mr-0 radius-7" outlined large color="teal" :icon="$vuetify.breakpoint.xsOnly" v-on="on">
+                      <v-icon :left="$vuetify.breakpoint.mdAndUp">mdi-plus</v-icon><span class="hidden-sm-and-down" :class="$vuetify.theme.dark ? `teal--text text--lighten-3` : ``">{{$t('editor:assets.newFolder')}}</span>
+                    </v-btn>
+                  </template>
+                  <v-card>
+                    <div class="dialog-header is-short subtitle-1">{{$t('editor:assets.newFolder')}}</div>
+                    <v-card-text class="pt-5">
+                      <v-text-field class="md2" outlined prepend-icon="mdi-folder-outline" v-model="newFolderName" :label="$t(`editor:assets.folderName`)" counter="255" @keydown.13="createFolder" @keyup.esc="newFolderDialog = false" ref="folderNameIpt"></v-text-field>
+                      <i18next class="caption grey--text text--darken-1 pl-5" path="editor:assets.folderNameNamingRules" tag="div"><a place="namingRules" href="https://docs-beta.requarks.io/guide/assets#naming-restrictions" target="_blank">{{$t('editor:assets.folderNameNamingRulesLink')}}</a></i18next>
+                    </v-card-text>
+                    <v-card-chin>
+                      <v-spacer></v-spacer>
+                      <v-btn text @click="newFolderDialog = false">{{$t('common:actions.cancel')}}</v-btn>
+                      <v-btn class="px-3" color="primary" @click="createFolder" :disabled="!isFolderNameValid" :loading="newFolderLoading">{{$t('common:actions.create')}}</v-btn>
+                    </v-card-chin>
+                  </v-card>
+                </v-dialog>
+              </div>
+              <v-toolbar flat dense :color="$vuetify.theme.dark ? `grey darken-3` : `white`">
+                <template v-if="folderTree.length > 0">
+                  <div class="body-2"><span class="mr-1">/</span>
+                    <template v-for="folder of folderTree"><span :key="folder.id">{{folder.name}}</span><span class="mx-1">/</span></template>
+                  </div>
+                </template>
+                <div class="body-2" v-else>/ <em>root</em></div>
+              </v-toolbar>
+              <template v-if="folders.length > 0 || currentFolderId > 0">
+                <v-btn class="is-icon mx-1" :color="$vuetify.theme.dark ? `grey lighten-1` : `grey darken-2`" outlined :dark="currentFolderId > 0" @click="upFolder()" :disabled="currentFolderId === 0">
+                  <v-icon>mdi-folder-upload</v-icon>
+                </v-btn>
+                <v-btn class="btn-normalcase mx-1" v-for="folder of folders" :key="folder.id" depressed color="grey darken-2" dark @click="downFolder(folder)">
+                  <v-icon left>mdi-folder</v-icon><span class="caption" style="text-transform: none;">{{ folder.name }}</span>
+                </v-btn>
+                <v-divider class="mt-2"></v-divider>
+              </template>
+              <v-data-table :items="assets" :headers="headers" :page.sync="pagination" :items-per-page="15" :loading="loading" must-sort sort-by="ID" sort-desc hide-default-footer dense>
+                <template slot="item" slot-scope="props">
+                  <tr class="is-clickable" @click.left="currentFileId = props.item.id" @click.right.prevent="" :class="currentFileId === props.item.id ? ($vuetify.theme.dark ? `grey darken-3-d5` : `teal lighten-5`) : ``">
+                    <td class="caption" v-if="$vuetify.breakpoint.smAndUp">{{ props.item.id }}</td>
+                    <td>
+                      <div class="body-2"><strong :class="currentFileId === props.item.id ? `teal--text` : ``">{{ props.item.filename }}</strong></div>
+                      <div class="caption grey--text">{{ props.item.description }}</div>
+                    </td>
+                    <td class="text-xs-center" v-if="$vuetify.breakpoint.lgAndUp">
+                      <v-chip class="ma-0" x-small :color="$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`">
+                        <div class="overline">{{props.item.ext.toUpperCase().substring(1)}}</div>
+                      </v-chip>
+                    </td>
+                    <td class="caption" v-if="$vuetify.breakpoint.mdAndUp">{{ props.item.fileSize | prettyBytes }}</td>
+                    <td class="caption" v-if="$vuetify.breakpoint.mdAndUp">{{ props.item.createdAt | moment('from') }}</td>
+                    <td v-if="$vuetify.breakpoint.smAndUp">
+                      <v-menu offset-x min-width="200">
+                        <template v-slot:activator="{ on }">
+                          <v-btn icon v-on="on" tile small @click.left="currentFileId = props.item.id">
+                            <v-icon color="grey darken-2">mdi-dots-horizontal</v-icon>
+                          </v-btn>
+                        </template>
+                        <v-list nav style="border-top: 5px solid #444;">
+                          <v-list-item @click="" disabled>
+                            <v-list-item-avatar size="24">
+                              <v-icon color="teal">mdi-text-short</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>{{$t('common:actions.properties')}}</v-list-item-content>
+                          </v-list-item>
+                          <template v-if="props.item.kind === `IMAGE`">
+                            <v-list-item @click="previewDialog = true" disabled>
+                              <v-list-item-avatar size="24">
+                                <v-icon color="green">mdi-image-search-outline</v-icon>
+                              </v-list-item-avatar>
+                              <v-list-item-content>{{$t('common:actions.preview')}}</v-list-item-content>
+                            </v-list-item>
+                            <v-list-item @click="" disabled>
+                              <v-list-item-avatar size="24">
+                                <v-icon color="indigo">mdi-crop-rotate</v-icon>
+                              </v-list-item-avatar>
+                              <v-list-item-content>{{$t('common:actions.edit')}}</v-list-item-content>
+                            </v-list-item>
+                            <v-list-item @click="" disabled>
+                              <v-list-item-avatar size="24">
+                                <v-icon color="purple">mdi-flash-circle</v-icon>
+                              </v-list-item-avatar>
+                              <v-list-item-content>{{$t('common:actions.optimize')}}</v-list-item-content>
+                            </v-list-item>
+                          </template>
+                          <v-list-item @click="openRenameDialog">
+                            <v-list-item-avatar size="24">
+                              <v-icon color="orange">mdi-keyboard-outline</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>{{$t('common:actions.rename')}}</v-list-item-content>
+                          </v-list-item>
+                          <v-list-item @click="" disabled>
+                            <v-list-item-avatar size="24">
+                              <v-icon color="blue">mdi-file-move</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>{{$t('common:actions.move')}}</v-list-item-content>
+                          </v-list-item>
+                          <v-list-item @click="deleteDialog = true">
+                            <v-list-item-avatar size="24">
+                              <v-icon color="red">mdi-file-hidden</v-icon>
+                            </v-list-item-avatar>
+                            <v-list-item-content>{{$t('common:actions.delete')}}</v-list-item-content>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </td>
+                  </tr>
+                </template>
+                <template slot="no-data">
+                  <v-alert class="mt-3 radius-7" icon="mdi-folder-open-outline" :value="true" outlined color="teal">{{$t('editor:assets.folderEmpty')}}</v-alert>
+                </template>
+              </v-data-table>
+              <div class="text-xs-center py-2" v-if="this.pageTotal > 1">
+                <v-pagination v-model="pagination" :length="pageTotal" color="teal"></v-pagination>
+              </div>
+              <div class="d-flex mt-3">
+                <v-toolbar class="radius-7" flat :color="$vuetify.theme.dark ? `grey darken-2` : `grey lighten-4`" dense height="44">
+                  <div class="body-2" :class="$vuetify.theme.dark ? `grey--text text--lighten-1` : `grey--text text--darken-1`">{{$t('editor:assets.fileCount', { count: assets.length })}}</div>
+                </v-toolbar>
+                <v-btn class="ml-3 mr-0 my-0 radius-7" color="red darken-2" large @click="cancel" dark>
+                  <v-icon left>mdi-close</v-icon><span>{{$t('common:actions.cancel')}}</span>
+                </v-btn>
+                <v-btn class="ml-3 mr-0 my-0 radius-7" color="teal" large @click="insert" :disabled="!currentFileId" :dark="currentFileId !== null">
+                  <v-icon left>mdi-playlist-plus</v-icon><span>{{$t('common:actions.insert')}}</span>
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-flex>
+        <v-flex xs12 lg3>
+          <v-card class="radius-7 animated fadeInRight wait-p3s" :light="!$vuetify.theme.dark" :dark="$vuetify.theme.dark">
+            <v-card-text>
+              <div class="d-flex">
+                <v-toolbar class="radius-7" :color="$vuetify.theme.dark ? `teal` : `teal lighten-5`" dense flat height="44">
+                  <v-icon class="mr-3" :color="$vuetify.theme.dark ? `white` : `teal`">mdi-cloud-upload</v-icon>
+                  <div class="body-2" :class="$vuetify.theme.dark ? `white--text` : `teal--text`">{{$t('editor:assets.uploadAssets')}}</div>
+                </v-toolbar>
+                <v-btn class="my-0 ml-3 mr-0 radius-7" outlined large color="teal" @click="browse" v-if="$vuetify.breakpoint.mdAndUp">
+                  <v-icon left>mdi-plus-box-multiple</v-icon><span :class="$vuetify.theme.dark ? `teal--text text--lighten-3` : ``">{{$t('common:actions.browse')}}</span>
+                </v-btn>
+              </div>
+              <file-pond class="mt-3" name="mediaUpload" ref="pond" :label-idle="$t(`editor:assets.uploadAssetsDropZone`)" allow-multiple="true" :files="files" max-files="10" :server="filePondServerOpts" :instant-upload="false" :allow-revert="false" @processfile="onFileProcessed"></file-pond>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions class="pa-3">
+              <div class="caption grey--text text-darken-2">Max 10 files, 5 MB each</div>
+              <v-spacer></v-spacer>
+              <v-btn class="px-4" color="teal" dark @click="upload">{{$t('common:actions.upload')}}</v-btn>
+            </v-card-actions>
+          </v-card>
+          <v-card class="mt-3 radius-7 animated fadeInRight wait-p4s" :light="!$vuetify.theme.dark" :dark="$vuetify.theme.dark">
+            <v-card-text class="pb-0">
+              <v-toolbar class="radius-7" :color="$vuetify.theme.dark ? `teal` : `teal lighten-5`" dense flat>
+                <v-icon class="mr-3" :color="$vuetify.theme.dark ? `white` : `teal`">mdi-cloud-download</v-icon>
+                <div class="body-2" :class="$vuetify.theme.dark ? `white--text` : `teal--text`">{{$t('editor:assets.fetchImage')}}</div>
+                <v-spacer></v-spacer>
+                <v-chip class="teal--text" label color="white" small>coming soon</v-chip>
+              </v-toolbar>
+              <v-text-field class="mt-3" v-model="remoteImageUrl" outlined color="teal" single-line placeholder="https://example.com/image.jpg"></v-text-field>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions class="pa-3">
+              <div class="caption grey--text text-darken-2">Max 5 MB</div>
+              <v-spacer></v-spacer>
+              <v-btn class="px-4" color="teal" disabled>{{$t('common:actions.fetch')}}</v-btn>
+            </v-card-actions>
+          </v-card>
+          <v-card class="mt-3 radius-7 animated fadeInRight wait-p4s" :light="!$vuetify.theme.dark" :dark="$vuetify.theme.dark">
+            <v-card-text class="pb-0">
+              <v-toolbar class="radius-7" :color="$vuetify.theme.dark ? `teal` : `teal lighten-5`" dense flat>
+                <v-icon class="mr-3" :color="$vuetify.theme.dark ? `white` : `teal`">mdi-format-align-top</v-icon>
+                <div class="body-2" :class="$vuetify.theme.dark ? `white--text` : `teal--text`">{{$t('editor:assets.imageAlign')}}</div>
+              </v-toolbar>
+              <v-select class="mt-3" v-model="imageAlignment" :items="imageAlignments" outlined single-line color="teal" placeholder="None"></v-select>
+            </v-card-text>
+          </v-card>
+        </v-flex>
+      </v-layout>
+    </v-container>
+    <v-dialog v-model="renameDialog" max-width="550" persistent>
+      <v-card>
+        <div class="dialog-header is-short is-orange">
+          <v-icon class="mr-2" color="white">mdi-keyboard</v-icon><span>{{$t('editor:assets.renameAsset')}}</span>
+        </div>
+        <v-card-text class="pt-5">
+          <div class="body-2">{{$t('editor:assets.renameAssetSubtitle')}}</div>
+          <v-text-field outlined single-line :counter="255" v-model="renameAssetName" @keydown.13="renameAsset" :disabled="renameAssetLoading"></v-text-field>
+        </v-card-text>
+        <v-card-chin>
+          <v-spacer></v-spacer>
+          <v-btn text @click="renameDialog = false" :disabled="renameAssetLoading">{{$t('common:actions.cancel')}}</v-btn>
+          <v-btn class="px-3 white--text" color="orange darken-3" @click="renameAsset" :loading="renameAssetLoading">{{$t('common:actions.rename')}}</v-btn>
+        </v-card-chin>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="deleteDialog" max-width="550" persistent>
+      <v-card>
+        <div class="dialog-header is-short is-red">
+          <v-icon class="mr-2" color="white">mdi-trash-can-outline</v-icon><span>{{$t('editor:assets.deleteAsset')}}</span>
+        </div>
+        <v-card-text class="pt-5">
+          <div class="body-2">{{$t('editor:assets.deleteAssetConfirm')}}</div>
+          <div class="body-2 red--text text--darken-2">{{currentAsset.filename}}?</div>
+          <div class="caption mt-3">{{$t('editor:assets.deleteAssetWarn')}}</div>
+        </v-card-text>
+        <v-card-chin>
+          <v-spacer></v-spacer>
+          <v-btn text @click="deleteDialog = false" :disabled="deleteAssetLoading">{{$t('common:actions.cancel')}}</v-btn>
+          <v-btn class="px-3 white--text" color="red darken-2" @click="deleteAsset" :loading="deleteAssetLoading">{{$t('common:actions.delete')}}</v-btn>
+        </v-card-chin>
+      </v-card>
+    </v-dialog>
+  </v-card>
 </template>
 
 <script>
